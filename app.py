@@ -3,44 +3,50 @@ import pandas as pd
 import io
 
 st.set_page_config(layout="centered")
-st.title("🔍 Análise de Estrutura vs. Estoque")
+st.title("📦 Análise de Estoque")
 
 def aplicar_regras(estrutura, estoque, destino, qtd_equipamentos):
     resultado = []
+
+    regras_transposicao = {
+        'PL': ['PV', 'MP', 'AA'],
+        'PV': ['PL', 'MP', 'AA'],
+        'MP': ['PL', 'PV'],
+        'AA': ['PV', 'MP']
+    }
+
     estrutura['Quantidade'] = estrutura['Quantidade'] * qtd_equipamentos
     estrutura_group = estrutura.groupby('Item')['Quantidade'].sum().reset_index()
 
     for _, row in estrutura_group.iterrows():
         item = row['Item']
         qtde_necessaria = row['Quantidade']
-        saldos = estoque[estoque['Item'] == item]
+        saldos_item = estoque[estoque['Item'] == item]
 
         codigos = {'PL': 0, 'MP': 0, 'AA': 0, 'PV': 0, 'RP': 0}
-        for codigo in codigos:
-            codigos[codigo] = saldos[saldos['Prefixo'] == codigo]['Quantidade'].sum()
+        for cod in codigos:
+            codigos[cod] = saldos_item[saldos_item['Prefixo'] == cod]['Quantidade'].sum()
 
-        saldo_utilizavel = codigos['PL'] + codigos['MP'] + codigos['AA'] + codigos['PV']
-        saldo_rp = codigos['RP']
+        saldo_direto = codigos[destino]
 
-        if destino == 'PL':
-            if saldo_utilizavel >= qtde_necessaria:
-                status = "Ok"
-            elif saldo_utilizavel + saldo_rp >= qtde_necessaria:
-                falta = qtde_necessaria - saldo_utilizavel
-                status = f"Necessário Transposição: {falta} unidades para o PV"
-            else:
-                falta = qtde_necessaria - (saldo_utilizavel + saldo_rp)
-                status = f"Solicitar Compra ({falta} unid.)"
+        if saldo_direto >= qtde_necessaria:
+            status = "✅ Ok"
         else:
-            if codigos[destino] >= qtde_necessaria:
-                status = "Ok"
+            falta = qtde_necessaria - saldo_direto
+            transposicoes_possiveis = 0
+
+            for origem in regras_transposicao.get(destino, []):
+                transposicoes_possiveis += codigos[origem]
+
+            if (saldo_direto + transposicoes_possiveis) >= qtde_necessaria:
+                falta_trans = qtde_necessaria - saldo_direto
+                status = f"⚠️ Necessário Transposição: {falta_trans} unidades para o {destino}"
+            elif destino == 'PL' and (saldo_direto + transposicoes_possiveis + codigos['RP']) >= qtde_necessaria:
+                falta_trans = qtde_necessaria - (saldo_direto + transposicoes_possiveis)
+                status = f"⚠️ Necessário Transposição: {falta_trans} unidades para o PL (inclui RP)"
             else:
-                falta = qtde_necessaria - codigos[destino]
-                transposicao = saldo_utilizavel - codigos[destino]
-                if transposicao >= falta:
-                    status = f"Necessário Transposição: {falta} unidades para o {destino}"
-                else:
-                    status = f"Solicitar Compra ({falta} unid.)"
+                falta_total = qtde_necessaria - (saldo_direto + transposicoes_possiveis + (codigos['RP'] if destino == 'PL' else 0))
+                status = f"❌ Solicitar Compra ({falta_total} unid.)"
 
         resultado.append({
             'Item': item,
@@ -54,6 +60,15 @@ def aplicar_regras(estrutura, estoque, destino, qtd_equipamentos):
         })
 
     return pd.DataFrame(resultado)
+
+def colorir_status(val):
+    if "Ok" in val:
+        return "background-color: #d4edda;"  # verde claro
+    elif "Transposição" in val:
+        return "background-color: #fff3cd;"  # amarelo claro
+    elif "Compra" in val:
+        return "background-color: #f8d7da;"  # vermelho claro
+    return ""
 
 estrutura_file = st.file_uploader("📦 Importe a Estrutura do Produto (Excel)", type=["xls", "xlsx"])
 estoque_file = st.file_uploader("🏷️ Importe o Estoque Atual (Excel - Protheus)", type=["xls", "xlsx"])
@@ -78,15 +93,13 @@ if estrutura_file and estoque_file:
         estrutura = estrutura[['Item', 'Quantidade']]
         estoque = estoque[['Item', 'Prefixo', 'Quantidade']]
 
-        executar = st.button("✅ Executar Análise")
-
-        if executar:
+        if st.button("✅ Executar Análise"):
             with st.spinner("Analisando os dados..."):
                 resultado_df = aplicar_regras(estrutura, estoque, destino, qtd_equipamentos)
                 st.success("Análise concluída!")
 
                 st.subheader("📊 Resultado da Análise")
-                st.dataframe(resultado_df[resultado_df['Status'] != "Ok"])
+                st.dataframe(resultado_df.style.applymap(colorir_status, subset=["Status"]))
 
                 buffer = io.BytesIO()
                 resultado_df.to_excel(buffer, index=False)
