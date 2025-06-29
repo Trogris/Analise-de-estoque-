@@ -3,7 +3,7 @@ import pandas as pd
 import io
 
 st.set_page_config(layout="centered")
-st.title("🔍 Análise de Estrutura")
+st.title("🔍 Análise de Estoque")
 
 def aplicar_regras(estrutura, estoque, destino, qtd_equipamentos):
     resultado = []
@@ -56,7 +56,7 @@ def aplicar_regras(estrutura, estoque, destino, qtd_equipamentos):
     return pd.DataFrame(resultado)
 
 estrutura_file = st.file_uploader("📦 Importe a Estrutura do Produto (Excel)", type=["xls", "xlsx"])
-estoque_file = st.file_uploader("🏷️ Importe o Estoque Atual (Excel - Protheus)", type=["xls", "xlsx"])
+estoque_file = st.file_uploader("🏷️ Importe o Estoque Atual (Excel)", type=["xls", "xlsx"])
 
 destino = st.selectbox("🔧 Tipo de Produção (Prefixo Destino)", ["PV", "PL"])
 qtd_equipamentos = st.number_input("🔢 Quantidade de Equipamentos a Produzir", min_value=1, value=1, step=1)
