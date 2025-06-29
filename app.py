@@ -109,5 +109,6 @@ if estrutura_file and estoque_file:
                 with col1:
                     if st.button("🔄 Nova Análise"):
     st.rerun()
+
                 with col2:
                     st.download_button("⬇️ Baixar Relatório Completo", data=buffer, file_name="relatorio_estoque.xlsx")
