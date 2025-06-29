@@ -3,7 +3,7 @@ import pandas as pd
 import io
 
 st.set_page_config(layout="centered")
-st.title("🔍 Análise de Estrutura vs. Estoque")
+st.title("🔍 Análise de Estrutura")
 
 def aplicar_regras(estrutura, estoque, destino, qtd_equipamentos):
     resultado = []
