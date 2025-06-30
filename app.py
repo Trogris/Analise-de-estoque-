@@ -10,37 +10,41 @@ def aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos):
     for _, row in estrutura_group.iterrows():
         item = row['Item']
         qtde_necessaria = row['Quantidade']
-        saldos = estoque[estoque['Item'] == item]
+        saldos_item = estoque[estoque['Item'] == item]
 
-        # Coletar saldo por prefixo
-        codigos = {p: saldos[saldos['Prefixo'] == p]['Quantidade'].sum() for p in ['PL', 'PV', 'RP', 'MP', 'AA']}
-        total_direto = codigos[destino]  # Estoque no destino
+        codigos = {
+            'PL': saldos_item[saldos_item['Prefixo'] == 'PL']['Quantidade'].sum(),
+            'PV': saldos_item[saldos_item['Prefixo'] == 'PV']['Quantidade'].sum(),
+            'RP': saldos_item[saldos_item['Prefixo'] == 'RP']['Quantidade'].sum(),
+            'MP': saldos_item[saldos_item['Prefixo'] == 'MP']['Quantidade'].sum(),
+            'AA': saldos_item[saldos_item['Prefixo'] == 'AA']['Quantidade'].sum()
+        }
+
+        total_direto = codigos[destino]
         falta = qtde_necessaria - total_direto
 
         status = "Ok" if falta <= 0 else ""
         alertas = []
 
         if status != "Ok":
-            # Tentativas de transposição sem alerta
             if destino == 'PL' and codigos['PV'] >= falta:
-                status = f"Transpor {falta} de PV para PL"
+                status = f"Transpor {int(falta)} de PV para PL"
             elif destino == 'PV' and codigos['PL'] >= falta:
-                status = f"Transpor {falta} de PL para PV"
+                status = f"Transpor {int(falta)} de PL para PV"
             elif destino == 'PL' and codigos['RP'] >= falta:
-                status = f"Transpor {falta} de RP para PL"
+                status = f"Transpor {int(falta)} de RP para PL"
             else:
-                # Verificar possibilidades com alerta
                 if destino == 'PV' and codigos['RP'] > 0:
-                    alertas.append(f"Possível transpor {codigos['RP']} de RP para PV ⚠️")
+                    alertas.append(f"Possível transpor {int(codigos['RP'])} de RP para PV ⚠️")
                 if codigos['MP'] > 0:
-                    alertas.append(f"Possível transpor {codigos['MP']} de MP para {destino} ⚠️")
+                    alertas.append(f"Possível transpor {int(codigos['MP'])} de MP para {destino} ⚠️")
                 if codigos['AA'] > 0:
-                    alertas.append(f"Possível transpor {codigos['AA']} de AA para {destino} ⚠️")
+                    alertas.append(f"Possível transpor {int(codigos['AA'])} de AA para {destino} ⚠️")
 
                 saldo_completo = total_direto + codigos['PV'] + codigos['PL'] + codigos['RP'] + codigos['MP'] + codigos['AA']
                 if saldo_completo < qtde_necessaria:
                     falta_final = qtde_necessaria - saldo_completo
-                    status = f"Comprar {falta_final} unidades"
+                    status = f"Comprar {int(falta_final)} unidades"
                 elif status == "":
                     status = "Requer decisão"
 
@@ -69,6 +73,8 @@ if estrutura_file and estoque_file:
 
     if 'Código' in estrutura.columns:
         estrutura = estrutura.rename(columns={'Código': 'Item'})
+    if 'CODIGO' in estrutura.columns:
+        estrutura = estrutura.rename(columns={'CODIGO': 'Item'})
     if 'CODIGO' in estoque.columns:
         estoque = estoque.rename(columns={'CODIGO': 'Item'})
     if 'TP' in estoque.columns:
@@ -76,22 +82,26 @@ if estrutura_file and estoque_file:
     if 'SALDO EM ESTOQUE' in estoque.columns:
         estoque = estoque.rename(columns={'SALDO EM ESTOQUE': 'Quantidade'})
 
-    estrutura = estrutura[['Item', 'Quantidade']]
-    estoque = estoque[['Item', 'Prefixo', 'Quantidade']]
+    if not {'Item', 'Quantidade'}.issubset(estrutura.columns):
+        st.error("❌ A planilha de estrutura precisa conter as colunas: 'Item' e 'Quantidade'")
+    elif not {'Item', 'Prefixo', 'Quantidade'}.issubset(estoque.columns):
+        st.error("❌ A planilha de estoque precisa conter as colunas: 'Item', 'Prefixo' e 'Quantidade'")
+    else:
+        estrutura = estrutura[['Item', 'Quantidade']]
+        estoque = estoque[['Item', 'Prefixo', 'Quantidade']]
 
-    if st.button("✅ Executar Análise"):
-        with st.spinner("Analisando os dados..."):
-            resultado_df = aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos)
-            st.success("Análise concluída!")
+        if st.button("✅ Executar Análise"):
+            with st.spinner("Analisando os dados..."):
+                resultado_df = aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos)
+                st.success("Análise concluída!")
 
-            st.subheader("📊 Resultado da Análise")
-            st.dataframe(resultado_df)
+                st.subheader("📊 Resultado da Análise")
+                st.dataframe(resultado_df)
 
-            if st.button("🔄 Nova Análise"):
-                st.experimental_rerun()
+                if st.button("🔄 Nova Análise"):
+                    st.experimental_rerun()
 
-            buffer = io.BytesIO()
-            resultado_df.to_excel(buffer, index=False)
-            buffer.seek(0)
-            st.download_button("⬇️ Baixar Relatório Completo", data=buffer, file_name="analise_estoque.xlsx")
-            
+                buffer = io.BytesIO()
+                resultado_df.to_excel(buffer, index=False)
+                buffer.seek(0)
+                st.download_button("⬇️ Baixar Relatório Completo", data=buffer, file_name="analise_estoque.xlsx")
