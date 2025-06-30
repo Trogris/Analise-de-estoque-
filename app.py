@@ -41,12 +41,17 @@ def aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos):
                 if codigos['AA'] > 0:
                     alertas.append(f"AA → {destino}: {int(codigos['AA'])} unidades disponíveis ⚠️")
 
-                saldo_completo = total_direto + sum(codigos.values())
+                saldo_alternativo = sum(v for k, v in codigos.items() if k != destino)
+                saldo_completo = total_direto + saldo_alternativo
+
                 if saldo_completo < qtde_necessaria:
                     falta_final = qtde_necessaria - saldo_completo
                     status = f"🔴 Comprar {int(falta_final)} unidades"
                 else:
                     status = "🟡 Requer decisão"
+
+                if not alertas:
+                    alertas.append("Nenhum saldo alternativo disponível ⚠️")
 
         else:
             status = "🟢 Ok"
@@ -56,7 +61,7 @@ def aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos):
             'Qtd Necessária': qtde_necessaria,
             **codigos,
             'Status': status,
-            'Alerta': " | ".join(alertas) if alertas else ""
+            'Alerta': " | ".join(alertas)
         })
 
     return pd.DataFrame(resultado)
