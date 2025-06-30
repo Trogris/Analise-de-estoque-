@@ -28,25 +28,28 @@ def aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos):
 
         if status != "Ok":
             if destino == 'PL' and codigos['PV'] >= falta:
-                status = f"Transpor {int(falta)} de PV para PL"
+                status = f"🟡 Transpor {int(falta)} de PV para PL"
             elif destino == 'PV' and codigos['PL'] >= falta:
-                status = f"Transpor {int(falta)} de PL para PV"
+                status = f"🟡 Transpor {int(falta)} de PL para PV"
             elif destino == 'PL' and codigos['RP'] >= falta:
-                status = f"Transpor {int(falta)} de RP para PL"
+                status = f"🟡 Transpor {int(falta)} de RP para PL"
             else:
                 if destino == 'PV' and codigos['RP'] > 0:
-                    alertas.append(f"Possível transpor {int(codigos['RP'])} de RP para PV ⚠️")
+                    alertas.append(f"RP → PV: {int(codigos['RP'])} unidades disponíveis ⚠️")
                 if codigos['MP'] > 0:
-                    alertas.append(f"Possível transpor {int(codigos['MP'])} de MP para {destino} ⚠️")
+                    alertas.append(f"MP → {destino}: {int(codigos['MP'])} unidades disponíveis ⚠️")
                 if codigos['AA'] > 0:
-                    alertas.append(f"Possível transpor {int(codigos['AA'])} de AA para {destino} ⚠️")
+                    alertas.append(f"AA → {destino}: {int(codigos['AA'])} unidades disponíveis ⚠️")
 
                 saldo_completo = total_direto + codigos['PV'] + codigos['PL'] + codigos['RP'] + codigos['MP'] + codigos['AA']
                 if saldo_completo < qtde_necessaria:
                     falta_final = qtde_necessaria - saldo_completo
-                    status = f"Comprar {int(falta_final)} unidades"
-                elif status == "":
-                    status = "Requer decisão"
+                    status = f"🔴 Comprar {int(falta_final)} unidades"
+                else:
+                    status = "🟡 Requer decisão"
+
+        else:
+            status = "🟢 Ok"
 
         resultado.append({
             'Item': item,
@@ -105,3 +108,4 @@ if estrutura_file and estoque_file:
                 resultado_df.to_excel(buffer, index=False)
                 buffer.seek(0)
                 st.download_button("⬇️ Baixar Relatório Completo", data=buffer, file_name="analise_estoque.xlsx")
+            
