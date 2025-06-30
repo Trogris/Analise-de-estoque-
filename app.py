@@ -68,28 +68,28 @@ if estrutura_file and estoque_file:
     if 'Código' in estrutura.columns:
         estrutura = estrutura.rename(columns={'Código': 'Item'})
     if 'CODIGO' in estoque.columns:
-        estoque = estoque.rename(columns={'CODIGO': 'Item', 'TP': 'Prefixo', 'ESTOQUE': 'Quantidade'})
+        estoque = estoque.rename(columns={'CODIGO': 'Item'})
+    if 'TP' in estoque.columns:
+        estoque = estoque.rename(columns={'TP': 'Prefixo'})
+    if 'SALDO EM ESTOQUE' in estoque.columns:
+        estoque = estoque.rename(columns={'SALDO EM ESTOQUE': 'Quantidade'})
 
-    if not {'Item', 'Quantidade'}.issubset(estrutura.columns):
-        st.error("❌ A planilha de estrutura deve conter as colunas: 'Item' e 'Quantidade'")
-    elif not {'Item', 'Prefixo', 'Quantidade'}.issubset(estoque.columns):
-        st.error("❌ A planilha de estoque deve conter as colunas: 'Item', 'Prefixo' e 'Quantidade'")
-    else:
-        estrutura = estrutura[['Item', 'Quantidade']]
-        estoque = estoque[['Item', 'Prefixo', 'Quantidade']]
+    estrutura = estrutura[['Item', 'Quantidade']]
+    estoque = estoque[['Item', 'Prefixo', 'Quantidade']]
 
-        if st.button("✅ Executar Análise"):
-            with st.spinner("Analisando os dados..."):
-                resultado_df = aplicar_regras(estrutura, estoque, destino, qtd_equipamentos)
-                st.success("Análise concluída!")
+    if st.button("✅ Executar Análise"):
+        with st.spinner("Analisando os dados..."):
+            resultado_df = aplicar_regras(estrutura, estoque, destino, qtd_equipamentos)
+            st.success("Análise concluída!")
 
-                st.subheader("📊 Resultado da Análise")
-                st.dataframe(resultado_df[resultado_df['Status'] != "Ok"])
+            st.subheader("📊 Resultado da Análise")
+            st.dataframe(resultado_df[resultado_df['Status'] != "Ok"])
 
-                if st.button("🔄 Nova Análise"):
-                    st.experimental_rerun()
+            if st.button("🔄 Nova Análise"):
+                st.experimental_rerun()
 
-                buffer = io.BytesIO()
-                resultado_df.to_excel(buffer, index=False)
-                buffer.seek(0)
-                st.download_button("⬇️ Baixar Relatório Completo", data=buffer, file_name="relatorio_estoque.xlsx")
+            buffer = io.BytesIO()
+            resultado_df.to_excel(buffer, index=False)
+            buffer.seek(0)
+            st.download_button("⬇️ Baixar Relatório Completo", data=buffer, file_name="relatorio_estoque.xlsx")
+            
