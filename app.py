@@ -2,10 +2,7 @@ import streamlit as st
 import pandas as pd
 import io
 
-st.set_page_config(layout="centered")
-st.title("🔍 Análise de Estoque")
-
-def aplicar_regras(estrutura, estoque, destino, qtd_equipamentos):
+def aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos):
     resultado = []
     estrutura['Quantidade'] = estrutura['Quantidade'] * qtd_equipamentos
     estrutura_group = estrutura.groupby('Item')['Quantidade'].sum().reset_index()
@@ -15,45 +12,50 @@ def aplicar_regras(estrutura, estoque, destino, qtd_equipamentos):
         qtde_necessaria = row['Quantidade']
         saldos = estoque[estoque['Item'] == item]
 
-        codigos = {'PL': 0, 'MP': 0, 'AA': 0, 'PV': 0, 'RP': 0}
-        for codigo in codigos:
-            codigos[codigo] = saldos[saldos['Prefixo'] == codigo]['Quantidade'].sum()
+        # Coletar saldo por prefixo
+        codigos = {p: saldos[saldos['Prefixo'] == p]['Quantidade'].sum() for p in ['PL', 'PV', 'RP', 'MP', 'AA']}
+        total_direto = codigos[destino]  # Estoque no destino
+        falta = qtde_necessaria - total_direto
 
-        saldo_utilizavel = codigos['PL'] + codigos['MP'] + codigos['AA'] + codigos['PV']
-        saldo_rp = codigos['RP']
+        status = "Ok" if falta <= 0 else ""
+        alertas = []
 
-        if destino == 'PL':
-            if saldo_utilizavel >= qtde_necessaria:
-                status = "Ok"
-            elif saldo_utilizavel + saldo_rp >= qtde_necessaria:
-                falta = qtde_necessaria - saldo_utilizavel
-                status = f"Necessário Transposição: {falta} unidades para o PV"
+        if status != "Ok":
+            # Tentativas de transposição sem alerta
+            if destino == 'PL' and codigos['PV'] >= falta:
+                status = f"Transpor {falta} de PV para PL"
+            elif destino == 'PV' and codigos['PL'] >= falta:
+                status = f"Transpor {falta} de PL para PV"
+            elif destino == 'PL' and codigos['RP'] >= falta:
+                status = f"Transpor {falta} de RP para PL"
             else:
-                falta = qtde_necessaria - (saldo_utilizavel + saldo_rp)
-                status = f"Solicitar Compra ({falta} unid.)"
-        else:
-            if codigos[destino] >= qtde_necessaria:
-                status = "Ok"
-            else:
-                falta = qtde_necessaria - codigos[destino]
-                transposicao = saldo_utilizavel - codigos[destino]
-                if transposicao >= falta:
-                    status = f"Necessário Transposição: {falta} unidades para o {destino}"
-                else:
-                    status = f"Solicitar Compra ({falta} unid.)"
+                # Verificar possibilidades com alerta
+                if destino == 'PV' and codigos['RP'] > 0:
+                    alertas.append(f"Possível transpor {codigos['RP']} de RP para PV ⚠️")
+                if codigos['MP'] > 0:
+                    alertas.append(f"Possível transpor {codigos['MP']} de MP para {destino} ⚠️")
+                if codigos['AA'] > 0:
+                    alertas.append(f"Possível transpor {codigos['AA']} de AA para {destino} ⚠️")
+
+                saldo_completo = total_direto + codigos['PV'] + codigos['PL'] + codigos['RP'] + codigos['MP'] + codigos['AA']
+                if saldo_completo < qtde_necessaria:
+                    falta_final = qtde_necessaria - saldo_completo
+                    status = f"Comprar {falta_final} unidades"
+                elif status == "":
+                    status = "Requer decisão"
 
         resultado.append({
             'Item': item,
             'Qtd Necessária': qtde_necessaria,
-            'Qtd PL': codigos['PL'],
-            'Qtd MP': codigos['MP'],
-            'Qtd AA': codigos['AA'],
-            'Qtd PV': codigos['PV'],
-            'Qtd RP': codigos['RP'],
-            'Status': status
+            **codigos,
+            'Status': status,
+            'Alerta': " | ".join(alertas) if alertas else ""
         })
 
     return pd.DataFrame(resultado)
+
+st.set_page_config(layout="centered")
+st.title("🔍 Análise de Estoque")
 
 estrutura_file = st.file_uploader("📦 Importe a Estrutura do Produto (Excel)", type=["xls", "xlsx"])
 estoque_file = st.file_uploader("🏷️ Importe o Estoque Atual (Excel)", type=["xls", "xlsx"])
@@ -79,11 +81,11 @@ if estrutura_file and estoque_file:
 
     if st.button("✅ Executar Análise"):
         with st.spinner("Analisando os dados..."):
-            resultado_df = aplicar_regras(estrutura, estoque, destino, qtd_equipamentos)
+            resultado_df = aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos)
             st.success("Análise concluída!")
 
             st.subheader("📊 Resultado da Análise")
-            st.dataframe(resultado_df[resultado_df['Status'] != "Ok"])
+            st.dataframe(resultado_df)
 
             if st.button("🔄 Nova Análise"):
                 st.experimental_rerun()
@@ -91,5 +93,5 @@ if estrutura_file and estoque_file:
             buffer = io.BytesIO()
             resultado_df.to_excel(buffer, index=False)
             buffer.seek(0)
-            st.download_button("⬇️ Baixar Relatório Completo", data=buffer, file_name="relatorio_estoque.xlsx")
+            st.download_button("⬇️ Baixar Relatório Completo", data=buffer, file_name="analise_estoque.xlsx")
             
