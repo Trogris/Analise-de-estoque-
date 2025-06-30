@@ -34,14 +34,14 @@ def aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos):
             elif destino == 'PL' and codigos['RP'] >= falta:
                 status = f"🟡 Transpor {int(falta)} de RP para PL"
             else:
-                if destino == 'PV' and codigos['RP'] > 0:
-                    alertas.append(f"RP → PV: {int(codigos['RP'])} unidades disponíveis ⚠️")
+                if codigos['RP'] > 0:
+                    alertas.append(f"RP → {destino}: {int(codigos['RP'])} unidades disponíveis ⚠️")
                 if codigos['MP'] > 0:
                     alertas.append(f"MP → {destino}: {int(codigos['MP'])} unidades disponíveis ⚠️")
                 if codigos['AA'] > 0:
                     alertas.append(f"AA → {destino}: {int(codigos['AA'])} unidades disponíveis ⚠️")
 
-                saldo_completo = total_direto + codigos['PV'] + codigos['PL'] + codigos['RP'] + codigos['MP'] + codigos['AA']
+                saldo_completo = total_direto + sum(codigos.values())
                 if saldo_completo < qtde_necessaria:
                     falta_final = qtde_necessaria - saldo_completo
                     status = f"🔴 Comprar {int(falta_final)} unidades"
