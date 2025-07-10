@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import io
 
-# Função principal de análise
 def aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos):
     resultado = []
     estrutura['Quantidade'] = estrutura['Quantidade'] * qtd_equipamentos
@@ -24,82 +23,107 @@ def aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos):
         total_direto = codigos[destino]
         falta = qtde_necessaria - total_direto
 
-        status = "🟢 Ok" if falta <= 0 else ""
+        status = "Ok" if falta <= 0 else ""
         alertas = []
 
-        if status != "🟢 Ok":
-            transposicao = 0
-            usar = 0
-
-            # Tentativas de transposição
-            if destino == 'PL':
-                for origem in ['MP', 'AA', 'PV']:
-                    usar = min(falta, codigos[origem])
-                    if usar > 0:
-                        falta -= usar
-                        transposicao += usar
-                        alertas.append(f"{usar} unid de {origem} → PL")
-                if falta > 0 and codigos['RP'] >= falta:
-                    alertas.append(f"{falta} unid de RP → uso direto")
-                    falta = 0
-            elif destino == 'PV':
-                for origem in ['MP', 'AA', 'PL']:
-                    usar = min(falta, codigos[origem])
-                    if usar > 0:
-                        falta -= usar
-                        transposicao += usar
-                        alertas.append(f"{usar} unid de {origem} → PV")
-
-            if falta > 0:
-                status = f"🔴 Comprar {int(falta)}"
+        if status != "Ok":
+            if destino == 'PL' and codigos['PV'] >= falta:
+                status = f"🟡 Transpor {int(falta)} de PV para PL"
+            elif destino == 'PV' and codigos['PL'] >= falta:
+                status = f"🟡 Transpor {int(falta)} de PL para PV"
+            elif destino == 'PL' and codigos['RP'] >= falta:
+                status = f"🟡 Usar {int(falta)} direto de RP"
             else:
-                status = "🟡 Necessário Transposição"
+                if codigos['RP'] > 0 and destino == 'PL':
+                    alertas.append(f"RP → {destino}: {int(codigos['RP'])} unidades disponíveis ⚠️")
+                if codigos['MP'] > 0:
+                    alertas.append(f"MP → {destino}: {int(codigos['MP'])} unidades disponíveis ⚠️")
+                if codigos['AA'] > 0:
+                    alertas.append(f"AA → {destino}: {int(codigos['AA'])} unidades disponíveis ⚠️")
+
+                saldo_alternativo = sum(v for k, v in codigos.items() if k != destino)
+                saldo_completo = total_direto + saldo_alternativo
+
+                if saldo_completo < qtde_necessaria:
+                    falta_final = qtde_necessaria - saldo_completo
+                    status = f"🔴 Comprar {int(falta_final)} unidades"
+                else:
+                    status = "🟡 Requer decisão"
+
+                if not alertas:
+                    alertas.append("Nenhum saldo alternativo disponível ⚠️")
+        else:
+            status = "🟢 Ok"
 
         resultado.append({
             'Item': item,
             'Qtd Necessária': qtde_necessaria,
             **codigos,
             'Status': status,
-            'Transposição': " | ".join(alertas) if alertas else ""
+            'Alerta': " | ".join(alertas)
         })
 
     return pd.DataFrame(resultado)
 
-# Interface Streamlit
+# Configuração da interface
 st.set_page_config(layout="centered")
 st.title("📘 Análise de Estoque para Produção")
 
-estrutura_file = st.file_uploader("📥 Estrutura do Produto (.xlsx)", type=["xls", "xlsx"])
-estoque_file = st.file_uploader("📥 Saldo em Estoque (.xlsx)", type=["xls", "xlsx"])
+estrutura_file = st.file_uploader("📥 Importe a Estrutura do Produto (.xlsx ou .csv)", type=["xlsx", "csv"])
+estoque_file = st.file_uploader("📥 Importe o Estoque Atual (.xlsx ou .csv)", type=["xlsx", "csv"])
 
-destino = st.selectbox("🎯 Código de Destino", ["PL", "PV"])
-qtd_equipamentos = st.number_input("🔢 Quantidade de Equipamentos a Produzir", min_value=1, value=1)
+destino = st.selectbox("Código de Destino", ["PL", "PV"])
+qtd_equipamentos = st.number_input("Quantidade de Equipamentos a Produzir", min_value=1, value=1)
 
 if estrutura_file and estoque_file:
-    estrutura = pd.read_excel(estrutura_file)
-    estoque = pd.read_excel(estoque_file)
+    # Detecta tipo de arquivo e lê corretamente
+    if estrutura_file.name.endswith('.csv'):
+        estrutura = pd.read_csv(estrutura_file)
+    else:
+        estrutura = pd.read_excel(estrutura_file)
 
-    # Renomeando colunas conforme nomes presentes nos arquivos enviados
-    estrutura = estrutura.rename(columns={'CÓDIGO': 'Item', 'QUANTIDADE': 'Quantidade'})
-    estoque = estoque.rename(columns={'CODIGO': 'Item', 'TP': 'Prefixo', 'SALDO EM ESTOQUE': 'Quantidade'})
+    if estoque_file.name.endswith('.csv'):
+        estoque = pd.read_csv(estoque_file)
+    else:
+        estoque = pd.read_excel(estoque_file)
 
-    estrutura = estrutura[['Item', 'Quantidade']]
-    estoque = estoque[['Item', 'Prefixo', 'Quantidade']]
+    # Padroniza colunas
+    estrutura.columns = [col.upper().strip() for col in estrutura.columns]
+    estoque.columns = [col.upper().strip() for col in estoque.columns]
 
-    if st.button("✅ Executar Análise"):
-        with st.spinner("🔍 Analisando os dados..."):
-            resultado_df = aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos)
-            st.success("✅ Análise concluída!")
+    # Renomeia colunas para padronizar
+    estrutura = estrutura.rename(columns={
+        'CÓDIGO': 'Item', 'CODIGO': 'Item', 'ITEM': 'Item',
+        'QUANTIDADE': 'Quantidade', 'QTD': 'Quantidade'
+    })
+    estoque = estoque.rename(columns={
+        'CÓDIGO': 'Item', 'CODIGO': 'Item', 'ITEM': 'Item',
+        'TP': 'Prefixo',
+        'SALDO EM ESTOQUE': 'Quantidade', 'SALDO': 'Quantidade'
+    })
 
-            st.subheader("📊 Resultado")
-            st.dataframe(resultado_df)
+    # Verificação de colunas obrigatórias
+    if not {'Item', 'Quantidade'}.issubset(estrutura.columns):
+        st.error("❌ Estrutura precisa ter colunas 'Item' e 'Quantidade'")
+    elif not {'Item', 'Prefixo', 'Quantidade'}.issubset(estoque.columns):
+        st.error("❌ Estoque precisa ter colunas 'Item', 'Prefixo' e 'Quantidade'")
+    else:
+        estrutura = estrutura[['Item', 'Quantidade']]
+        estoque = estoque[['Item', 'Prefixo', 'Quantidade']]
 
-            buffer = io.BytesIO()
-            resultado_df.to_excel(buffer, index=False)
-            buffer.seek(0)
-            st.download_button("📥 Baixar Resultado", data=buffer, file_name="resultado_estoque.xlsx")
+        if st.button("✅ Executar Análise"):
+            with st.spinner("🔍 Analisando os dados..."):
+                resultado_df = aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos)
+                st.success("✅ Análise concluída!")
+                st.dataframe(resultado_df)
+
+                # Exportação para Excel
+                buffer = io.BytesIO()
+                resultado_df.to_excel(buffer, index=False)
+                buffer.seek(0)
+                st.download_button("📥 Baixar Resultado", data=buffer, file_name="resultado_estoque.xlsx")
 
         if st.button("🔄 Nova Análise"):
             st.experimental_rerun()
-            
+
             
