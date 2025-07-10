@@ -1,109 +1,7 @@
 import streamlit as st
 import pandas as pd
 import io
-import unicodedata
 import re
-
-def normalizar_texto(texto):
-    """
-    Normaliza texto removendo acentos, espaços extras e convertendo para minúsculas
-    """
-    if pd.isna(texto):
-        return ""
-    
-    # Converter para string e minúsculas
-    texto = str(texto).lower().strip()
-    
-    # Remover acentos
-    texto = unicodedata.normalize('NFD', texto)
-    texto = ''.join(char for char in texto if unicodedata.category(char) != 'Mn')
-    
-    # Remover espaços extras e caracteres especiais
-    texto = re.sub(r'[^a-z0-9]', '', texto)
-    
-    return texto
-
-def detectar_coluna(colunas, padroes_busca):
-    """
-    Detecta uma coluna baseada em padrões de busca flexíveis
-    """
-    colunas_normalizadas = {normalizar_texto(col): col for col in colunas}
-    
-    for padrao in padroes_busca:
-        padrao_normalizado = normalizar_texto(padrao)
-        
-        # Busca exata
-        if padrao_normalizado in colunas_normalizadas:
-            return colunas_normalizadas[padrao_normalizado]
-        
-        # Busca parcial (contém o padrão)
-        for col_norm, col_orig in colunas_normalizadas.items():
-            if padrao_normalizado in col_norm:
-                return col_orig
-    
-    return None
-
-def mapear_colunas_automaticamente(df, tipo_arquivo):
-    """
-    Mapeia automaticamente as colunas baseado no tipo de arquivo
-    """
-    colunas = list(df.columns)
-    mapeamento = {}
-    
-    if tipo_arquivo == "estrutura":
-        # Padrões para identificar coluna de código/item
-        padroes_codigo = [
-            'codigo', 'código', 'item', 'cod', 'code', 'product', 'produto',
-            'part', 'parte', 'material', 'componente', 'id'
-        ]
-        
-        # Padrões para identificar coluna de quantidade
-        padroes_quantidade = [
-            'quantidade', 'qtd', 'qty', 'quant', 'qtde', 'qnt',
-            'volume', 'total', 'amount', 'valor'
-        ]
-        
-        mapeamento['Item'] = detectar_coluna(colunas, padroes_codigo)
-        mapeamento['Quantidade'] = detectar_coluna(colunas, padroes_quantidade)
-        
-    elif tipo_arquivo == "estoque":
-        # Padrões para identificar coluna de código/item
-        padroes_codigo = [
-            'codigo', 'código', 'item', 'cod', 'code', 'product', 'produto',
-            'part', 'parte', 'material', 'componente', 'id'
-        ]
-        
-        # Padrões para identificar coluna de tipo/prefixo
-        padroes_tipo = [
-            'tp', 'tipo', 'type', 'prefixo', 'prefix', 'categoria',
-            'class', 'classe', 'group', 'grupo'
-        ]
-        
-        # Padrões para identificar coluna de saldo/quantidade
-        padroes_saldo = [
-            'saldo', 'saldoemestoque', 'saldo em estoque', 'estoque',
-            'quantidade', 'qtd', 'qty', 'quant', 'qtde', 'qnt',
-            'balance', 'stock', 'inventory', 'disponivel'
-        ]
-        
-        mapeamento['Item'] = detectar_coluna(colunas, padroes_codigo)
-        mapeamento['Prefixo'] = detectar_coluna(colunas, padroes_tipo)
-        mapeamento['Quantidade'] = detectar_coluna(colunas, padroes_saldo)
-    
-    return mapeamento
-
-def aplicar_mapeamento_colunas(df, mapeamento):
-    """
-    Aplica o mapeamento de colunas ao DataFrame
-    """
-    # Criar um novo DataFrame apenas com as colunas mapeadas
-    df_mapeado = pd.DataFrame()
-    
-    for nome_padrao, coluna_original in mapeamento.items():
-        if coluna_original and coluna_original in df.columns:
-            df_mapeado[nome_padrao] = df[coluna_original]
-    
-    return df_mapeado
 
 def aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos):
     resultado = []
@@ -123,6 +21,9 @@ def aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos):
             'AA': saldos_item[saldos_item['Prefixo'] == 'AA']['Quantidade'].sum()
         }
 
+        # Calcular total disponível
+        total_disponivel = sum(codigos.values())
+
         total_direto = codigos[destino]
         falta = qtde_necessaria - total_direto
 
@@ -130,14 +31,16 @@ def aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos):
         alertas = []
 
         if status != "Ok":
+            # REGRAS EXATAS DO CÓDIGO ORIGINAL:
             if destino == 'PL' and codigos['PV'] >= falta:
                 status = f"🟡 Transpor {int(falta)} de PV para PL"
             elif destino == 'PV' and codigos['PL'] >= falta:
                 status = f"🟡 Transpor {int(falta)} de PL para PV"
-            elif destino == 'PL' and codigos['RP'] >= falta:
-                status = f"🟡 Usar {int(falta)} direto de RP"
+            elif destino == 'PL' and codigos['RP'] >= falta:  # RP só para PL!
+                status = f"🟡 Transpor {int(falta)} de RP para PL"
             else:
-                if codigos['RP'] > 0 and destino == 'PL':
+                # ALERTAS EXATOS DO CÓDIGO ORIGINAL:
+                if codigos['RP'] > 0:
                     alertas.append(f"RP → {destino}: {int(codigos['RP'])} unidades disponíveis ⚠️")
                 if codigos['MP'] > 0:
                     alertas.append(f"MP → {destino}: {int(codigos['MP'])} unidades disponíveis ⚠️")
@@ -155,12 +58,14 @@ def aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos):
 
                 if not alertas:
                     alertas.append("Nenhum saldo alternativo disponível ⚠️")
+
         else:
             status = "🟢 Ok"
 
         resultado.append({
             'Item': item,
             'Qtd Necessária': qtde_necessaria,
+            'Total': total_disponivel,  # COLUNA TOTAL
             **codigos,
             'Status': status,
             'Alerta': " | ".join(alertas)
@@ -168,144 +73,217 @@ def aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos):
 
     return pd.DataFrame(resultado)
 
-def calcular_saldo_total_estoque(estoque):
+def calcular_resumo_necessidades(estrutura, estoque, destino, qtd_equipamentos):
     """
-    Calcula o saldo total do estoque somando apenas os prefixos PL, PV, RP, MP e AA
+    Calcula resumo consolidado das necessidades por prefixo
     """
-    prefixos_alvo = ['PL', 'PV', 'RP', 'MP', 'AA']
+    # Calcular necessidades totais por item
+    estrutura_calc = estrutura.copy()
+    estrutura_calc['Quantidade'] = estrutura_calc['Quantidade'] * qtd_equipamentos
+    estrutura_group = estrutura_calc.groupby('Item')['Quantidade'].sum().reset_index()
     
-    # Filtrar apenas os itens com os prefixos desejados
-    estoque_filtrado = estoque[estoque['Prefixo'].isin(prefixos_alvo)]
+    # Inicializar contadores
+    necessidades_por_prefixo = {
+        'PL': 0, 'PV': 0, 'RP': 0, 'MP': 0, 'AA': 0
+    }
     
-    # Calcular soma por prefixo
-    soma_por_prefixo = estoque_filtrado.groupby('Prefixo')['Quantidade'].sum()
+    disponivel_por_prefixo = {
+        'PL': 0, 'PV': 0, 'RP': 0, 'MP': 0, 'AA': 0
+    }
     
-    # Calcular total
-    total_saldo_estoque = soma_por_prefixo.sum()
+    # Para cada item necessário
+    for _, row in estrutura_group.iterrows():
+        item = row['Item']
+        qtde_necessaria = row['Quantidade']
+        
+        # Buscar no estoque
+        saldos_item = estoque[estoque['Item'] == item]
+        
+        if not saldos_item.empty:
+            # Somar disponível por prefixo para este item
+            for prefixo in ['PL', 'PV', 'RP', 'MP', 'AA']:
+                disponivel = saldos_item[saldos_item['Prefixo'] == prefixo]['Quantidade'].sum()
+                disponivel_por_prefixo[prefixo] += disponivel
+        
+        # A necessidade vai para o prefixo de destino
+        necessidades_por_prefixo[destino] += qtde_necessaria
     
-    return soma_por_prefixo, total_saldo_estoque
+    # Calcular saldo (disponível - necessário)
+    saldo_por_prefixo = {}
+    for prefixo in ['PL', 'PV', 'RP', 'MP', 'AA']:
+        saldo_por_prefixo[prefixo] = disponivel_por_prefixo[prefixo] - necessidades_por_prefixo[prefixo]
+    
+    return necessidades_por_prefixo, disponivel_por_prefixo, saldo_por_prefixo
 
-# Configuração da interface
+def calcular_estatisticas_finais(resultado_df):
+    """
+    Calcula as estatísticas específicas solicitadas pelo usuário
+    """
+    total_itens = len(resultado_df)
+    
+    # Contar itens que precisam compra vs disponíveis
+    itens_compra = len(resultado_df[resultado_df['Status'].str.contains('🔴 Comprar')])
+    itens_disponiveis = total_itens - itens_compra  # OK + Transposição + Decisão
+    
+    # Total de unidades para comprar
+    total_unidades_comprar = 0
+    for _, row in resultado_df.iterrows():
+        if '🔴 Comprar' in row['Status']:
+            # Extrair número do status
+            match = re.search(r'Comprar (\d+)', row['Status'])
+            if match:
+                total_unidades_comprar += int(match.group(1))
+    
+    # Percentuais
+    perc_compra = (itens_compra / total_itens * 100) if total_itens > 0 else 0
+    perc_disponivel = (itens_disponiveis / total_itens * 100) if total_itens > 0 else 0
+    
+    return {
+        'total_itens': total_itens,
+        'total_unidades_comprar': total_unidades_comprar,
+        'perc_compra': perc_compra,
+        'perc_disponivel': perc_disponivel
+    }
+
 st.set_page_config(layout="centered")
-st.title("📘 Análise de Estoque para Produção")
+st.title("🔍 Análise de Estoque")
 
-# Botão Nova Análise no topo
-col1, col2 = st.columns([3, 1])
-with col2:
-    if st.button("🔄 Nova Análise", type="secondary"):
-        # Limpar cache e reiniciar a aplicação
-        st.cache_data.clear()
-        st.rerun()
+estrutura_file = st.file_uploader("📦 Importe a Estrutura do Produto (Excel)", type=["xls", "xlsx"])
+estoque_file = st.file_uploader("🏷️ Importe o Estoque Atual (Excel)", type=["xls", "xlsx"])
 
-estrutura_file = st.file_uploader("📥 Importe a Estrutura do Produto (.xlsx ou .csv)", type=["xlsx", "csv"])
-estoque_file = st.file_uploader("📥 Importe o Estoque Atual (.xlsx ou .csv)", type=["xlsx", "csv"])
-
-destino = st.selectbox("Código de Destino", ["PL", "PV"])
-qtd_equipamentos = st.number_input("Quantidade de Equipamentos a Produzir", min_value=1, value=1)
+destino = st.selectbox("🔧 Tipo de Produção (Prefixo Destino)", ["PV", "PL"])
+qtd_equipamentos = st.number_input("🔢 Quantidade de Equipamentos a Produzir", min_value=1, value=1, step=1)
 
 if estrutura_file and estoque_file:
-    try:
-        # Detecta tipo de arquivo e lê corretamente
-        if estrutura_file.name.endswith('.csv'):
-            estrutura_original = pd.read_csv(estrutura_file)
-        else:
-            estrutura_original = pd.read_excel(estrutura_file)
+    estrutura = pd.read_excel(estrutura_file)
+    estoque = pd.read_excel(estoque_file)
 
-        if estoque_file.name.endswith('.csv'):
-            estoque_original = pd.read_csv(estoque_file)
-        else:
-            estoque_original = pd.read_excel(estoque_file)
+    if 'Código' in estrutura.columns:
+        estrutura = estrutura.rename(columns={'Código': 'Item'})
+    if 'CODIGO' in estrutura.columns:
+        estrutura = estrutura.rename(columns={'CODIGO': 'Item'})
+    if 'CODIGO' in estoque.columns:
+        estoque = estoque.rename(columns={'CODIGO': 'Item'})
+    if 'TP' in estoque.columns:
+        estoque = estoque.rename(columns={'TP': 'Prefixo'})
+    if 'SALDO EM ESTOQUE' in estoque.columns:
+        estoque = estoque.rename(columns={'SALDO EM ESTOQUE': 'Quantidade'})
 
-        # NOVO: Detecção automática de colunas
-        st.info("🔍 Detectando colunas automaticamente...")
-        
-        # Mapear colunas automaticamente
-        mapeamento_estrutura = mapear_colunas_automaticamente(estrutura_original, "estrutura")
-        mapeamento_estoque = mapear_colunas_automaticamente(estoque_original, "estoque")
-        
-        # Mostrar mapeamento detectado
-        with st.expander("🔧 Mapeamento de Colunas Detectado", expanded=False):
-            st.write("**Estrutura do Produto:**")
-            for padrao, original in mapeamento_estrutura.items():
-                if original:
-                    st.write(f"  • {padrao}: `{original}`")
-                else:
-                    st.write(f"  • {padrao}: ❌ Não encontrada")
-            
-            st.write("**Estoque:**")
-            for padrao, original in mapeamento_estoque.items():
-                if original:
-                    st.write(f"  • {padrao}: `{original}`")
-                else:
-                    st.write(f"  • {padrao}: ❌ Não encontrada")
-        
-        # Aplicar mapeamento
-        estrutura = aplicar_mapeamento_colunas(estrutura_original, mapeamento_estrutura)
-        estoque = aplicar_mapeamento_colunas(estoque_original, mapeamento_estoque)
-        
-        # Verificação de colunas obrigatórias
-        estrutura_ok = {'Item', 'Quantidade'}.issubset(estrutura.columns) and not estrutura.empty
-        estoque_ok = {'Item', 'Prefixo', 'Quantidade'}.issubset(estoque.columns) and not estoque.empty
-        
-        if not estrutura_ok:
-            st.error("❌ Não foi possível identificar as colunas necessárias na Estrutura do Produto")
-            st.write("**Colunas necessárias:** Item/Código e Quantidade")
-            st.write(f"**Colunas encontradas:** {list(estrutura_original.columns)}")
-        elif not estoque_ok:
-            st.error("❌ Não foi possível identificar as colunas necessárias no Estoque")
-            st.write("**Colunas necessárias:** Item/Código, Tipo/Prefixo e Saldo/Quantidade")
-            st.write(f"**Colunas encontradas:** {list(estoque_original.columns)}")
-        else:
-            st.success("✅ Colunas identificadas com sucesso!")
-            
-            # NOVA FUNCIONALIDADE: Mostrar saldo total do estoque por prefixos
-            st.subheader("📊 Saldo Total do Estoque por Prefixos")
-            
-            soma_por_prefixo, total_saldo_estoque = calcular_saldo_total_estoque(estoque)
-            
-            # Criar DataFrame para exibição
-            df_saldo_resumo = pd.DataFrame({
-                'Prefixo': soma_por_prefixo.index,
-                'Saldo em Estoque': soma_por_prefixo.values
-            })
-            
-            # Adicionar linha de total
-            df_total = pd.DataFrame({
-                'Prefixo': ['TOTAL (PL+PV+RP+MP+AA)'],
-                'Saldo em Estoque': [total_saldo_estoque]
-            })
-            
-            df_saldo_completo = pd.concat([df_saldo_resumo, df_total], ignore_index=True)
-            
-            # Exibir tabela com formatação
-            st.dataframe(
-                df_saldo_completo.style.format({'Saldo em Estoque': '{:,.2f}'}),
-                use_container_width=True
-            )
-            
-            # Destacar o total
-            st.metric(
-                label="🎯 Saldo Total do Estoque (PL+PV+RP+MP+AA)",
-                value=f"{total_saldo_estoque:,.2f}"
-            )
+    if not {'Item', 'Quantidade'}.issubset(estrutura.columns):
+        st.error("❌ A planilha de estrutura precisa conter as colunas: 'Item' e 'Quantidade'")
+    elif not {'Item', 'Prefixo', 'Quantidade'}.issubset(estoque.columns):
+        st.error("❌ A planilha de estoque precisa conter as colunas: 'Item', 'Prefixo' e 'Quantidade'")
+    else:
+        estrutura = estrutura[['Item', 'Quantidade']]
+        estoque = estoque[['Item', 'Prefixo', 'Quantidade']]
 
-            if st.button("✅ Executar Análise"):
-                with st.spinner("🔍 Analisando os dados..."):
-                    resultado_df = aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos)
-                    st.success("✅ Análise concluída!")
-                    st.dataframe(resultado_df)
+        if st.button("✅ Executar Análise"):
+            with st.spinner("Analisando os dados..."):
+                # Resumo consolidado
+                necessidades, disponivel, saldo = calcular_resumo_necessidades(estrutura, estoque, destino, qtd_equipamentos)
+                
+                # Análise detalhada original
+                resultado_df = aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos)
+                
+                st.success("Análise concluída!")
 
-                    # Exportação para Excel
-                    buffer = io.BytesIO()
-                    resultado_df.to_excel(buffer, index=False)
-                    buffer.seek(0)
-                    st.download_button("📥 Baixar Resultado", data=buffer, file_name="resultado_estoque.xlsx")
-    
-    except Exception as e:
-        st.error(f"❌ Erro ao processar os arquivos: {str(e)}")
-        st.write("Verifique se os arquivos estão no formato correto e tente novamente.")
+                # Mostrar resumo consolidado primeiro
+                st.subheader("📊 Resumo Consolidado por Prefixo")
+                
+                # Criar DataFrame do resumo
+                resumo_df = pd.DataFrame({
+                    'Prefixo': ['PL', 'PV', 'RP', 'MP', 'AA'],
+                    'Necessário': [necessidades[p] for p in ['PL', 'PV', 'RP', 'MP', 'AA']],
+                    'Disponível': [disponivel[p] for p in ['PL', 'PV', 'RP', 'MP', 'AA']],
+                    'Saldo': [saldo[p] for p in ['PL', 'PV', 'RP', 'MP', 'AA']]
+                })
+                
+                # Destacar o prefixo de destino
+                def highlight_destino(row):
+                    if row['Prefixo'] == destino:
+                        return ['background-color: #e6f3ff'] * len(row)
+                    return [''] * len(row)
+                
+                st.dataframe(
+                    resumo_df.style.apply(highlight_destino, axis=1).format({
+                        'Necessário': '{:.0f}',
+                        'Disponível': '{:.0f}',
+                        'Saldo': '{:.0f}'
+                    }),
+                    use_container_width=True
+                )
+                
+                # Métricas principais
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric(
+                        f"🎯 Necessário para {destino}",
+                        f"{necessidades[destino]:.0f}",
+                        help=f"Total necessário para produzir {qtd_equipamentos} equipamento(s)"
+                    )
+                with col2:
+                    st.metric(
+                        f"📦 Disponível em {destino}",
+                        f"{disponivel[destino]:.0f}",
+                        help=f"Total disponível no estoque com prefixo {destino}"
+                    )
+                with col3:
+                    saldo_destino = saldo[destino]
+                    delta_color = "normal" if saldo_destino >= 0 else "inverse"
+                    st.metric(
+                        f"⚖️ Saldo {destino}",
+                        f"{saldo_destino:.0f}",
+                        delta=f"{'Sobra' if saldo_destino >= 0 else 'Falta'}: {abs(saldo_destino):.0f}",
+                        delta_color=delta_color,
+                        help="Diferença entre disponível e necessário"
+                    )
 
-# Rodapé com informações
-st.markdown("---")
-st.markdown("💡 **Dica:** O sistema detecta automaticamente diferentes variações nos nomes das colunas (código/CÓDIGO/Código, quantidade/QTD/qtde, etc.)")
-st.markdown("🔧 **Suporte:** Aceita arquivos Excel (.xlsx) e CSV (.csv) com diferentes formatos de coluna")
+                st.subheader("📋 Análise Detalhada por Item")
+                st.dataframe(resultado_df)
+
+                # NOVA SEÇÃO: ESTATÍSTICAS FINAIS
+                st.subheader("📈 Necessidades de Compra")
+                
+                # Calcular estatísticas
+                stats = calcular_estatisticas_finais(resultado_df)
+                
+                # Mostrar estatísticas em formato de métricas
+                col1, col2, col3, col4 = st.columns(4)
+                
+                with col1:
+                    st.metric(
+                        "📊 Total de itens analisados",
+                        f"{stats['total_itens']}",
+                        help="Número total de itens únicos analisados"
+                    )
+                
+                with col2:
+                    st.metric(
+                        "🛒 Total de unidades para comprar",
+                        f"{stats['total_unidades_comprar']:,}",
+                        help="Soma de todas as unidades que precisam ser compradas"
+                    )
+                
+                with col3:
+                    st.metric(
+                        "🔴 Percentual de itens que precisam de compra",
+                        f"{stats['perc_compra']:.1f}%",
+                        help="Percentual de itens que requerem compra"
+                    )
+                
+                with col4:
+                    st.metric(
+                        "🟢 Percentual de itens disponíveis em estoque",
+                        f"{stats['perc_disponivel']:.1f}%",
+                        help="Percentual de itens que já estão disponíveis ou podem ser resolvidos com transposição"
+                    )
+
+                # POSIÇÃO ORIGINAL DOS BOTÕES (mantida exatamente como no código original)
+                if st.button("🔄 Nova Análise"):
+                    st.rerun()
+
+                buffer = io.BytesIO()
+                resultado_df.to_excel(buffer, index=False)
+                buffer.seek(0)
+                st.download_button("⬇️ Baixar Relatório Completo", data=buffer, file_name="analise_estoque.xlsx")
+
