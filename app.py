@@ -11,14 +11,14 @@ def aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos):
     for _, row in estrutura_group.iterrows():
         item = row['Item']
         qtde_necessaria = row['Quantidade']
-        saldos_item = estoque[estoque['Item'] == item]
+        saldos_item = estoque[estoque['CODIGO'] == item]
 
         codigos = {
-            'PL': saldos_item[saldos_item['Prefixo'] == 'PL']['Quantidade'].sum(),
-            'PV': saldos_item[saldos_item['Prefixo'] == 'PV']['Quantidade'].sum(),
-            'RP': saldos_item[saldos_item['Prefixo'] == 'RP']['Quantidade'].sum(),
-            'MP': saldos_item[saldos_item['Prefixo'] == 'MP']['Quantidade'].sum(),
-            'AA': saldos_item[saldos_item['Prefixo'] == 'AA']['Quantidade'].sum()
+            'PL': saldos_item[saldos_item['TP'] == 'PL']['SALDO EM ESTOQUE'].sum(),
+            'PV': saldos_item[saldos_item['TP'] == 'PV']['SALDO EM ESTOQUE'].sum(),
+            'RP': saldos_item[saldos_item['TP'] == 'RP']['SALDO EM ESTOQUE'].sum(),
+            'MP': saldos_item[saldos_item['TP'] == 'MP']['SALDO EM ESTOQUE'].sum(),
+            'AA': saldos_item[saldos_item['TP'] == 'AA']['SALDO EM ESTOQUE'].sum()
         }
 
         # Calcular total disponível
@@ -73,48 +73,6 @@ def aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos):
 
     return pd.DataFrame(resultado)
 
-def calcular_resumo_necessidades(estrutura, estoque, destino, qtd_equipamentos):
-    """
-    Calcula resumo consolidado das necessidades por prefixo
-    """
-    # Calcular necessidades totais por item
-    estrutura_calc = estrutura.copy()
-    estrutura_calc['Quantidade'] = estrutura_calc['Quantidade'] * qtd_equipamentos
-    estrutura_group = estrutura_calc.groupby('Item')['Quantidade'].sum().reset_index()
-    
-    # Inicializar contadores
-    necessidades_por_prefixo = {
-        'PL': 0, 'PV': 0, 'RP': 0, 'MP': 0, 'AA': 0
-    }
-    
-    disponivel_por_prefixo = {
-        'PL': 0, 'PV': 0, 'RP': 0, 'MP': 0, 'AA': 0
-    }
-    
-    # Para cada item necessário
-    for _, row in estrutura_group.iterrows():
-        item = row['Item']
-        qtde_necessaria = row['Quantidade']
-        
-        # Buscar no estoque
-        saldos_item = estoque[estoque['Item'] == item]
-        
-        if not saldos_item.empty:
-            # Somar disponível por prefixo para este item
-            for prefixo in ['PL', 'PV', 'RP', 'MP', 'AA']:
-                disponivel = saldos_item[saldos_item['Prefixo'] == prefixo]['Quantidade'].sum()
-                disponivel_por_prefixo[prefixo] += disponivel
-        
-        # A necessidade vai para o prefixo de destino
-        necessidades_por_prefixo[destino] += qtde_necessaria
-    
-    # Calcular saldo (disponível - necessário)
-    saldo_por_prefixo = {}
-    for prefixo in ['PL', 'PV', 'RP', 'MP', 'AA']:
-        saldo_por_prefixo[prefixo] = disponivel_por_prefixo[prefixo] - necessidades_por_prefixo[prefixo]
-    
-    return necessidades_por_prefixo, disponivel_por_prefixo, saldo_por_prefixo
-
 def calcular_estatisticas_finais(resultado_df):
     """
     Calcula as estatísticas específicas solicitadas pelo usuário
@@ -140,12 +98,58 @@ def calcular_estatisticas_finais(resultado_df):
     
     return {
         'total_itens': total_itens,
-        'total_unidades_comprar': total_unidades_comprar,
+        'total_itens_compra': itens_compra,
         'perc_compra': perc_compra,
         'perc_disponivel': perc_disponivel
     }
 
-st.set_page_config(layout="centered")
+# Configuração da página para layout responsivo
+st.set_page_config(
+    page_title="Análise de Estoque",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# CSS personalizado para responsividade
+st.markdown("""
+<style>
+    .main .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+        max-width: 100%;
+    }
+    
+    .metric-container {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border-left: 4px solid #007bff;
+        margin-bottom: 1rem;
+    }
+    
+    .metric-title {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+    
+    .metric-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #212529;
+    }
+    
+    @media (max-width: 768px) {
+        .metric-value {
+            font-size: 1.2rem;
+        }
+        .metric-title {
+            font-size: 0.8rem;
+        }
+    }
+</style>
+""", unsafe_allow_html=True)
+
 st.title("🔍 Análise de Estoque")
 
 estrutura_file = st.file_uploader("📦 Importe a Estrutura do Produto (Excel)", type=["xls", "xlsx"])
@@ -158,125 +162,71 @@ if estrutura_file and estoque_file:
     estrutura = pd.read_excel(estrutura_file)
     estoque = pd.read_excel(estoque_file)
 
+    # Renomeação robusta de colunas
     if 'Código' in estrutura.columns:
         estrutura = estrutura.rename(columns={'Código': 'Item'})
     if 'CODIGO' in estrutura.columns:
         estrutura = estrutura.rename(columns={'CODIGO': 'Item'})
-    if 'CODIGO' in estoque.columns:
-        estoque = estoque.rename(columns={'CODIGO': 'Item'})
-    if 'TP' in estoque.columns:
-        estoque = estoque.rename(columns={'TP': 'Prefixo'})
-    if 'SALDO EM ESTOQUE' in estoque.columns:
-        estoque = estoque.rename(columns={'SALDO EM ESTOQUE': 'Quantidade'})
 
     if not {'Item', 'Quantidade'}.issubset(estrutura.columns):
         st.error("❌ A planilha de estrutura precisa conter as colunas: 'Item' e 'Quantidade'")
-    elif not {'Item', 'Prefixo', 'Quantidade'}.issubset(estoque.columns):
-        st.error("❌ A planilha de estoque precisa conter as colunas: 'Item', 'Prefixo' e 'Quantidade'")
+    elif not {'CODIGO', 'TP', 'SALDO EM ESTOQUE'}.issubset(estoque.columns):
+        st.error("❌ A planilha de estoque precisa conter as colunas: 'CODIGO', 'TP' e 'SALDO EM ESTOQUE'")
     else:
         estrutura = estrutura[['Item', 'Quantidade']]
-        estoque = estoque[['Item', 'Prefixo', 'Quantidade']]
 
         if st.button("✅ Executar Análise"):
             with st.spinner("Analisando os dados..."):
-                # Resumo consolidado
-                necessidades, disponivel, saldo = calcular_resumo_necessidades(estrutura, estoque, destino, qtd_equipamentos)
-                
-                # Análise detalhada original
+                # Análise detalhada
                 resultado_df = aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos)
                 
                 st.success("Análise concluída!")
 
-                # Mostrar resumo consolidado primeiro
-                st.subheader("📊 Resumo Consolidado por Prefixo")
-                
-                # Criar DataFrame do resumo
-                resumo_df = pd.DataFrame({
-                    'Prefixo': ['PL', 'PV', 'RP', 'MP', 'AA'],
-                    'Necessário': [necessidades[p] for p in ['PL', 'PV', 'RP', 'MP', 'AA']],
-                    'Disponível': [disponivel[p] for p in ['PL', 'PV', 'RP', 'MP', 'AA']],
-                    'Saldo': [saldo[p] for p in ['PL', 'PV', 'RP', 'MP', 'AA']]
-                })
-                
-                # Destacar o prefixo de destino
-                def highlight_destino(row):
-                    if row['Prefixo'] == destino:
-                        return ['background-color: #e6f3ff'] * len(row)
-                    return [''] * len(row)
-                
-                st.dataframe(
-                    resumo_df.style.apply(highlight_destino, axis=1).format({
-                        'Necessário': '{:.0f}',
-                        'Disponível': '{:.0f}',
-                        'Saldo': '{:.0f}'
-                    }),
-                    use_container_width=True
-                )
-                
-                # Métricas principais
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric(
-                        f"🎯 Necessário para {destino}",
-                        f"{necessidades[destino]:.0f}",
-                        help=f"Total necessário para produzir {qtd_equipamentos} equipamento(s)"
-                    )
-                with col2:
-                    st.metric(
-                        f"📦 Disponível em {destino}",
-                        f"{disponivel[destino]:.0f}",
-                        help=f"Total disponível no estoque com prefixo {destino}"
-                    )
-                with col3:
-                    saldo_destino = saldo[destino]
-                    delta_color = "normal" if saldo_destino >= 0 else "inverse"
-                    st.metric(
-                        f"⚖️ Saldo {destino}",
-                        f"{saldo_destino:.0f}",
-                        delta=f"{'Sobra' if saldo_destino >= 0 else 'Falta'}: {abs(saldo_destino):.0f}",
-                        delta_color=delta_color,
-                        help="Diferença entre disponível e necessário"
-                    )
-
                 st.subheader("📋 Análise Detalhada por Item")
-                st.dataframe(resultado_df)
+                st.dataframe(resultado_df, use_container_width=True)
 
-                # NOVA SEÇÃO: ESTATÍSTICAS FINAIS
+                # SEÇÃO: NECESSIDADES DE COMPRA (RESPONSIVA)
                 st.subheader("📈 Necessidades de Compra")
                 
                 # Calcular estatísticas
                 stats = calcular_estatisticas_finais(resultado_df)
                 
-                # Mostrar estatísticas em formato de métricas
-                col1, col2, col3, col4 = st.columns(4)
+                # Layout responsivo para as métricas
+                col1, col2 = st.columns(2)
                 
                 with col1:
-                    st.metric(
-                        "📊 Total de itens analisados",
-                        f"{stats['total_itens']}",
-                        help="Número total de itens únicos analisados"
-                    )
+                    # Métrica 1
+                    st.markdown(f"""
+                    <div class="metric-container">
+                        <div class="metric-title">📊 Total de itens analisados</div>
+                        <div class="metric-value">{stats['total_itens']}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Métrica 3
+                    st.markdown(f"""
+                    <div class="metric-container">
+                        <div class="metric-title">🔴 Percentual de itens que precisam de compra</div>
+                        <div class="metric-value">{stats['perc_compra']:.1f}%</div>
+                    </div>
+                    """, unsafe_allow_html=True)
                 
                 with col2:
-                    st.metric(
-                        "🛒 Total de unidades para comprar",
-                        f"{stats['total_unidades_comprar']:,}",
-                        help="Soma de todas as unidades que precisam ser compradas"
-                    )
-                
-                with col3:
-                    st.metric(
-                        "🔴 Percentual de itens que precisam de compra",
-                        f"{stats['perc_compra']:.1f}%",
-                        help="Percentual de itens que requerem compra"
-                    )
-                
-                with col4:
-                    st.metric(
-                        "🟢 Percentual de itens disponíveis em estoque",
-                        f"{stats['perc_disponivel']:.1f}%",
-                        help="Percentual de itens que já estão disponíveis ou podem ser resolvidos com transposição"
-                    )
+                    # Métrica 2
+                    st.markdown(f"""
+                    <div class="metric-container">
+                        <div class="metric-title">🛒 Total de itens para comprar</div>
+                        <div class="metric-value">{stats['total_itens_compra']}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Métrica 4
+                    st.markdown(f"""
+                    <div class="metric-container">
+                        <div class="metric-title">🟢 Percentual de itens disponíveis em estoque</div>
+                        <div class="metric-value">{stats['perc_disponivel']:.1f}%</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
                 # POSIÇÃO ORIGINAL DOS BOTÕES (mantida exatamente como no código original)
                 if st.button("🔄 Nova Análise"):
@@ -286,4 +236,5 @@ if estrutura_file and estoque_file:
                 resultado_df.to_excel(buffer, index=False)
                 buffer.seek(0)
                 st.download_button("⬇️ Baixar Relatório Completo", data=buffer, file_name="analise_estoque.xlsx")
+
 
