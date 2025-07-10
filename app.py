@@ -238,3 +238,4 @@ if estrutura_file and estoque_file:
                 st.download_button("⬇️ Baixar Relatório Completo", data=buffer, file_name="analise_estoque.xlsx")
 
 
+
