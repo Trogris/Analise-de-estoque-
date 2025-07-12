@@ -3,6 +3,46 @@ import pandas as pd
 import io
 import re
 
+def extrair_sufixo_codigo(codigo):
+    """
+    Extrai o sufixo numérico do código (últimos 7 caracteres)
+    Ex: PV0020019 -> 0020019
+    """
+    if len(codigo) >= 7:
+        return codigo[-7:]
+    return codigo
+
+def calcular_custo_unitario(estoque, sufixo):
+    """
+    Calcula o custo unitário médio baseado no valor total do estoque
+    """
+    # Buscar todos os registros com o mesmo sufixo
+    registros_item = estoque[estoque['CODIGO'].str.endswith(sufixo, na=False)]
+    
+    if registros_item.empty:
+        return 0.0
+    
+    # Verificar se existe coluna de valor (possíveis nomes)
+    colunas_valor = ['VALOR TOTAL', 'VALOR_TOTAL', 'VALOR', 'CUSTO TOTAL', 'CUSTO_TOTAL', 'CUSTO']
+    coluna_valor = None
+    
+    for col in colunas_valor:
+        if col in registros_item.columns:
+            coluna_valor = col
+            break
+    
+    if coluna_valor is None:
+        return 0.0  # Sem informação de valor
+    
+    # Calcular custo unitário médio
+    valor_total = registros_item[coluna_valor].sum()
+    quantidade_total = registros_item['SALDO EM ESTOQUE'].sum()
+    
+    if quantidade_total > 0:
+        return valor_total / quantidade_total
+    else:
+        return 0.0
+
 def aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos):
     resultado = []
     estrutura['Quantidade'] = estrutura['Quantidade'] * qtd_equipamentos
@@ -11,24 +51,32 @@ def aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos):
     for _, row in estrutura_group.iterrows():
         item = row['Item']
         qtde_necessaria = row['Quantidade']
-        saldos_item = estoque[estoque['CODIGO'] == item]
+        
+        # CORREÇÃO PRINCIPAL: Buscar por sufixo do código
+        sufixo = extrair_sufixo_codigo(item)
+        saldos_item = estoque[estoque['CODIGO'].str.endswith(sufixo, na=False)]
 
+        # Calcular saldos por prefixo (TP) de TODOS os códigos encontrados
+        # INCLUINDO OI (Outros Insumos)
         codigos = {
             'PL': saldos_item[saldos_item['TP'] == 'PL']['SALDO EM ESTOQUE'].sum(),
             'PV': saldos_item[saldos_item['TP'] == 'PV']['SALDO EM ESTOQUE'].sum(),
             'RP': saldos_item[saldos_item['TP'] == 'RP']['SALDO EM ESTOQUE'].sum(),
             'MP': saldos_item[saldos_item['TP'] == 'MP']['SALDO EM ESTOQUE'].sum(),
-            'AA': saldos_item[saldos_item['TP'] == 'AA']['SALDO EM ESTOQUE'].sum()
+            'AA': saldos_item[saldos_item['TP'] == 'AA']['SALDO EM ESTOQUE'].sum(),
+            'OI': saldos_item[saldos_item['TP'] == 'OI']['SALDO EM ESTOQUE'].sum()  # NOVO: OI incluído
         }
 
-        # Calcular total disponível
+        # Total disponível = soma de TODOS os prefixos encontrados (incluindo OI)
         total_disponivel = sum(codigos.values())
 
+        # Lógica de transposição baseada no destino selecionado
         total_direto = codigos[destino]
         falta = qtde_necessaria - total_direto
 
         status = "Ok" if falta <= 0 else ""
         alertas = []
+        qtd_comprar = 0  # NOVO: Quantidade para comprar
 
         if status != "Ok":
             # REGRAS EXATAS DO CÓDIGO ORIGINAL:
@@ -46,12 +94,16 @@ def aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos):
                     alertas.append(f"MP → {destino}: {int(codigos['MP'])} unidades disponíveis ⚠️")
                 if codigos['AA'] > 0:
                     alertas.append(f"AA → {destino}: {int(codigos['AA'])} unidades disponíveis ⚠️")
+                # NOVO: OI apenas como alerta informativo (sem transposição)
+                if codigos['OI'] > 0:
+                    alertas.append(f"OI → {destino}: {int(codigos['OI'])} unidades disponíveis ⚠️")
 
                 saldo_alternativo = sum(v for k, v in codigos.items() if k != destino)
                 saldo_completo = total_direto + saldo_alternativo
 
                 if saldo_completo < qtde_necessaria:
                     falta_final = qtde_necessaria - saldo_completo
+                    qtd_comprar = falta_final  # NOVO: Quantidade para comprar
                     status = f"🔴 Comprar {int(falta_final)} unidades"
                 else:
                     status = "🟡 Requer decisão"
@@ -62,13 +114,20 @@ def aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos):
         else:
             status = "🟢 Ok"
 
+        # NOVO: Calcular custo estimado da compra
+        custo_unitario = calcular_custo_unitario(estoque, sufixo)
+        custo_estimado = custo_unitario * qtd_comprar if qtd_comprar > 0 else 0.0
+
         resultado.append({
             'Item': item,
             'Qtd Necessária': qtde_necessaria,
-            'Total': total_disponivel,  # COLUNA TOTAL
-            **codigos,
+            'Total': total_disponivel,  # Soma de TODOS os prefixos encontrados (incluindo OI)
+            **codigos,  # Mostra cada prefixo individualmente (incluindo OI)
             'Status': status,
-            'Alerta': " | ".join(alertas)
+            'Alerta': " | ".join(alertas),
+            'Qtd Comprar': qtd_comprar,  # NOVO: Quantidade para comprar
+            'Custo Unit. (R$)': custo_unitario,  # NOVO: Custo unitário
+            'Custo Estimado (R$)': custo_estimado  # NOVO: Custo estimado da compra
         })
 
     return pd.DataFrame(resultado)
@@ -84,13 +143,10 @@ def calcular_estatisticas_finais(resultado_df):
     itens_disponiveis = total_itens - itens_compra  # OK + Transposição + Decisão
     
     # Total de unidades para comprar
-    total_unidades_comprar = 0
-    for _, row in resultado_df.iterrows():
-        if '🔴 Comprar' in row['Status']:
-            # Extrair número do status
-            match = re.search(r'Comprar (\d+)', row['Status'])
-            if match:
-                total_unidades_comprar += int(match.group(1))
+    total_unidades_comprar = resultado_df['Qtd Comprar'].sum()
+    
+    # NOVO: Custo total estimado da compra
+    custo_total_estimado = resultado_df['Custo Estimado (R$)'].sum()
     
     # Percentuais
     perc_compra = (itens_compra / total_itens * 100) if total_itens > 0 else 0
@@ -99,6 +155,8 @@ def calcular_estatisticas_finais(resultado_df):
     return {
         'total_itens': total_itens,
         'total_itens_compra': itens_compra,
+        'total_unidades_comprar': total_unidades_comprar,
+        'custo_total_estimado': custo_total_estimado,  # NOVO
         'perc_compra': perc_compra,
         'perc_disponivel': perc_disponivel
     }
@@ -139,12 +197,39 @@ st.markdown("""
         color: #212529;
     }
     
+    .metric-subtitle {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 0.5rem;
+    }
+    
+    .metric-subvalue {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #495057;
+        margin-top: 0.25rem;
+    }
+    
+    .cost-container {
+        background-color: #e8f5e8;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border-left: 4px solid #28a745;
+        margin-bottom: 1rem;
+    }
+    
     @media (max-width: 768px) {
         .metric-value {
             font-size: 1.2rem;
         }
+        .metric-subvalue {
+            font-size: 1rem;
+        }
         .metric-title {
             font-size: 0.8rem;
+        }
+        .metric-subtitle {
+            font-size: 0.75rem;
         }
     }
 </style>
@@ -182,51 +267,73 @@ if estrutura_file and estoque_file:
                 
                 st.success("Análise concluída!")
 
-                st.subheader("📋 Análise Detalhada por Item")
-                st.dataframe(resultado_df, use_container_width=True)
+                # TÍTULO ALTERADO CONFORME SOLICITADO
+                st.subheader("📋 Análise detalhada")
+                
+                # CONFIGURAR TABELA PARA COMEÇAR DO ÍNDICE 1
+                resultado_df_display = resultado_df.copy()
+                resultado_df_display.index = range(1, len(resultado_df_display) + 1)
+                
+                # Formatar colunas de custo para exibição
+                resultado_df_display['Custo Unit. (R$)'] = resultado_df_display['Custo Unit. (R$)'].apply(lambda x: f"R$ {x:.2f}" if x > 0 else "N/A")
+                resultado_df_display['Custo Estimado (R$)'] = resultado_df_display['Custo Estimado (R$)'].apply(lambda x: f"R$ {x:.2f}" if x > 0 else "-")
+                
+                st.dataframe(resultado_df_display, use_container_width=True)
 
-                # SEÇÃO: NECESSIDADES DE COMPRA (RESPONSIVA)
+                # SEÇÃO: NECESSIDADES DE COMPRA (RESPONSIVA COM NOVA ORGANIZAÇÃO)
                 st.subheader("📈 Necessidades de Compra")
                 
                 # Calcular estatísticas
                 stats = calcular_estatisticas_finais(resultado_df)
                 
-                # Layout responsivo para as métricas
+                # Layout responsivo para as métricas - NOVA ORGANIZAÇÃO
                 col1, col2 = st.columns(2)
                 
                 with col1:
-                    # Métrica 1
+                    # Métrica 1: Total analisados + % disponíveis
                     st.markdown(f"""
                     <div class="metric-container">
                         <div class="metric-title">📊 Total de itens analisados</div>
                         <div class="metric-value">{stats['total_itens']}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    # Métrica 3
-                    st.markdown(f"""
-                    <div class="metric-container">
-                        <div class="metric-title">🔴 Percentual de itens que precisam de compra</div>
-                        <div class="metric-value">{stats['perc_compra']:.1f}%</div>
+                        <div class="metric-subtitle">🟢 Percentual de itens disponíveis em estoque</div>
+                        <div class="metric-subvalue">{stats['perc_disponivel']:.1f}%</div>
                     </div>
                     """, unsafe_allow_html=True)
                 
                 with col2:
-                    # Métrica 2
+                    # Métrica 2: Total para comprar + % precisam comprar
                     st.markdown(f"""
                     <div class="metric-container">
                         <div class="metric-title">🛒 Total de itens para comprar</div>
                         <div class="metric-value">{stats['total_itens_compra']}</div>
+                        <div class="metric-subtitle">🔴 Percentual de itens que precisam ser comprados</div>
+                        <div class="metric-subvalue">{stats['perc_compra']:.1f}%</div>
                     </div>
                     """, unsafe_allow_html=True)
+
+                # NOVO: Seção de Custo Estimado
+                if stats['custo_total_estimado'] > 0:
+                    st.subheader("💰 Custo Estimado da Compra")
                     
-                    # Métrica 4
-                    st.markdown(f"""
-                    <div class="metric-container">
-                        <div class="metric-title">🟢 Percentual de itens disponíveis em estoque</div>
-                        <div class="metric-value">{stats['perc_disponivel']:.1f}%</div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.markdown(f"""
+                        <div class="cost-container">
+                            <div class="metric-title">💵 Total de unidades para comprar</div>
+                            <div class="metric-value">{int(stats['total_unidades_comprar'])}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with col2:
+                        st.markdown(f"""
+                        <div class="cost-container">
+                            <div class="metric-title">💰 Custo total estimado</div>
+                            <div class="metric-value">R$ {stats['custo_total_estimado']:,.2f}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    st.info("💡 **Custo calculado baseado no valor médio do estoque atual. Valores reais podem variar conforme fornecedor e condições de mercado.**")
 
                 # POSIÇÃO ORIGINAL DOS BOTÕES (mantida exatamente como no código original)
                 if st.button("🔄 Nova Análise"):
@@ -236,6 +343,3 @@ if estrutura_file and estoque_file:
                 resultado_df.to_excel(buffer, index=False)
                 buffer.seek(0)
                 st.download_button("⬇️ Baixar Relatório Completo", data=buffer, file_name="analise_estoque.xlsx")
-
-
-
