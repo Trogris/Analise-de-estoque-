@@ -110,9 +110,7 @@ def aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos):
                     alertas.append(f"MP → {destino}: {int(codigos['MP'])} unidades disponíveis ⚠️")
                 if codigos['AA'] > 0:
                     alertas.append(f"AA → {destino}: {int(codigos['AA'])} unidades disponíveis ⚠️")
-                # OI apenas como alerta informativo (sem transposição)
-                if codigos['OI'] > 0:
-                    alertas.append(f"OI → {destino}: {int(codigos['OI'])} unidades disponíveis ⚠️")
+                # OI NÃO GERA ALERTA (conforme solicitado)
                 # Outros prefixos como alertas
                 if outros_total > 0:
                     outros_lista = outros_prefixos['TP'].unique()
@@ -301,7 +299,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🔍 Análise de Estoque")
+st.title("Análise de Estoque")
 
 estrutura_file = st.file_uploader("📦 Importe a Estrutura do Produto (Excel)", type=["xls", "xlsx"])
 estoque_file = st.file_uploader("🏷️ Importe o Estoque Atual (Excel)", type=["xls", "xlsx"])
@@ -334,7 +332,7 @@ if estrutura_file and estoque_file:
                 st.success("Análise concluída!")
 
                 # Análise detalhada
-                st.subheader("📋 Análise detalhada")
+                st.subheader("Análise detalhada")
                 
                 # CONFIGURAR TABELA PARA COMEÇAR DO ÍNDICE 1
                 resultado_df_display = resultado_df.copy()
@@ -343,7 +341,7 @@ if estrutura_file and estoque_file:
                 st.dataframe(resultado_df_display, use_container_width=True)
 
                 # SEÇÃO: NECESSIDADES DE COMPRA (COM NOVA ORGANIZAÇÃO)
-                st.subheader("📈 Necessidades de Compra")
+                st.subheader("Necessidades de Compra")
                 
                 # Calcular estatísticas
                 stats = calcular_estatisticas_finais(resultado_df)
@@ -358,8 +356,8 @@ if estrutura_file and estoque_file:
                     <div class="metric-container">
                         <div class="metric-title">📊 Total de itens analisados</div>
                         <div class="metric-value">{stats['total_itens']}</div>
-                        <div class="metric-subtitle">💵 Valor total estimado para compra</div>
-                        <div class="metric-subvalue">R$ {valor_total_estimado:,.2f}</div>
+                        <div class="metric-subtitle">Valor total estimado para compra</div>
+                        <div class="metric-subvalue">{stats['total_unidades_comprar']:,} unidades e R$ {valor_total_estimado:,.2f}</div>
                     </div>
                     """, unsafe_allow_html=True)
                 
@@ -376,7 +374,7 @@ if estrutura_file and estoque_file:
 
                 # SEÇÃO: CUSTO ESTIMADO DA COMPRA (mantida)
                 if coluna_valor:
-                    st.subheader("💰 Custo Estimado da Compra")
+                    st.subheader("Custo Estimado da Compra")
                     
                     col1, col2 = st.columns(2)
                     
@@ -384,25 +382,17 @@ if estrutura_file and estoque_file:
                         st.markdown(f"""
                         <div class="cost-container">
                             <div class="cost-title">📦 Total de unidades para comprar</div>
-                            <div class="cost-value">{stats['total_unidades_comprar']} unidades</div>
+                            <div class="cost-value">{stats['total_unidades_comprar']:,} unidades</div>
                         </div>
                         """, unsafe_allow_html=True)
                     
                     with col2:
                         st.markdown(f"""
                         <div class="cost-container">
-                            <div class="cost-title">💵 Custo total estimado</div>
+                            <div class="cost-title">Custo total estimado</div>
                             <div class="cost-value">R$ {valor_total_estimado:,.2f}</div>
                         </div>
                         """, unsafe_allow_html=True)
-                    
-                    # Aviso sobre a estimativa
-                    st.markdown(f"""
-                    <div class="cost-warning">
-                        ⚠️ Custo calculado baseado no valor médio do estoque atual (coluna: {coluna_valor}). 
-                        Valores reais podem variar conforme fornecedor e condições de mercado.
-                    </div>
-                    """, unsafe_allow_html=True)
                 
                 else:
                     st.info("💡 Para calcular o custo estimado da compra, inclua uma coluna de valor/custo na planilha de estoque.")
