@@ -2,6 +2,21 @@ import streamlit as st
 import pandas as pd
 import io
 
+def formatar_moeda_br(valor):
+    """
+    Formata valores monetários no padrão brasileiro
+    Ex: 737.79 -> R$ 737,79
+    Ex: 2463219.47 -> R$ 2.463.219,47
+    """
+    if valor == 0:
+        return "R$ 0,00"
+    
+    formatado = f"{valor:,.2f}"        # 2,463,219.47
+    formatado = formatado.replace(',', 'X')  # 2X463X219.47
+    formatado = formatado.replace('.', ',')  # 2X463X219,47
+    formatado = formatado.replace('X', '.')  # 2.463.219,47
+    return f"R$ {formatado}"
+
 def extrair_sufixo_codigo(codigo):
     """
     Extrai o sufixo numérico do código (últimos 7 caracteres)
@@ -139,13 +154,13 @@ def aplicar_regras_com_alertas(estrutura, estoque, destino, qtd_equipamentos):
         custo_unitario, valor_total_estoque = calcular_custo_unitario(estoque, sufixo, coluna_valor)
         custo_estimado = custo_unitario * qtd_comprar if qtd_comprar > 0 else 0
 
-        # Formatação garantida dos valores
+        # Formatação com padrão brasileiro
         if custo_unitario > 0:
-            custo_unit_formatado = f"R$ {custo_unitario:.2f}"
+            custo_unit_formatado = formatar_moeda_br(custo_unitario)
         else:
             custo_unit_formatado = "N/A"
         
-        custo_est_formatado = f"R$ {custo_estimado:.2f}" if custo_estimado > 0 else "R$ 0,00"
+        custo_est_formatado = formatar_moeda_br(custo_estimado)
 
         resultado.append({
             'Item': item,
@@ -191,8 +206,8 @@ def calcular_valor_total_estimado(resultado_df):
     valor_total = 0
     for _, row in resultado_df.iterrows():
         if row['Qtd Comprar'] > 0:
-            # Extrair valor numérico do custo estimado
-            custo_str = str(row['Custo Estimado (R$)']).replace('R$ ', '').replace(',', '.')
+            # Extrair valor numérico do custo estimado formatado em padrão brasileiro
+            custo_str = str(row['Custo Estimado (R$)']).replace('R$ ', '').replace('.', '').replace(',', '.')
             try:
                 valor_total += float(custo_str)
             except:
@@ -381,11 +396,9 @@ if estrutura_file and estoque_file:
                     st.markdown(f"""
                     <div class="metric-container">
                         <div class="metric-title">Custo total estimado</div>
-                        <div class="metric-value">R$ {valor_total_estimado:,.2f}</div>
+                        <div class="metric-value">{formatar_moeda_br(valor_total_estimado)}</div>
                     </div>
                     """, unsafe_allow_html=True)
-
-
 
                 # POSIÇÃO ORIGINAL DOS BOTÕES
                 if st.button("🔄 Nova Análise"):
