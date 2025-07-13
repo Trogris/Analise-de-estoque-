@@ -17,6 +17,14 @@ def formatar_moeda_br(valor):
     formatado = formatado.replace('X', '.')  # 2.463.219,47
     return f"R$ {formatado}"
 
+def formatar_numero_br(numero):
+    """
+    Formata números inteiros no padrão brasileiro
+    Ex: 3215 -> 3.215
+    Ex: 1000000 -> 1.000.000
+    """
+    return f"{numero:,}".replace(',', '.')
+
 def extrair_sufixo_codigo(codigo):
     """
     Extrai o sufixo numérico do código (últimos 7 caracteres)
@@ -364,7 +372,7 @@ if estrutura_file and estoque_file:
                     st.markdown(f"""
                     <div class="metric-container">
                         <div class="metric-title">📊 Total de itens analisados</div>
-                        <div class="metric-value">{stats['total_itens']}</div>
+                        <div class="metric-value">{formatar_numero_br(stats['total_itens'])}</div>
                         <div class="metric-subtitle">🟢 Percentual de itens em estoque</div>
                         <div class="metric-subvalue">{100 - stats['perc_compra']:.1f}%</div>
                     </div>
@@ -375,7 +383,7 @@ if estrutura_file and estoque_file:
                     st.markdown(f"""
                     <div class="metric-container">
                         <div class="metric-title">🛒 Total de itens para comprar</div>
-                        <div class="metric-value">{stats['total_itens_compra']}</div>
+                        <div class="metric-value">{formatar_numero_br(stats['total_itens_compra'])}</div>
                         <div class="metric-subtitle">🔴 Percentual de itens que precisam ser comprados</div>
                         <div class="metric-subvalue">{stats['perc_compra']:.1f}%</div>
                     </div>
@@ -388,7 +396,7 @@ if estrutura_file and estoque_file:
                     st.markdown(f"""
                     <div class="metric-container">
                         <div class="metric-title">📦 Total de unidades para comprar</div>
-                        <div class="metric-value">{stats['total_unidades_comprar']:,} unidades</div>
+                        <div class="metric-value">{formatar_numero_br(stats['total_unidades_comprar'])} unidades</div>
                     </div>
                     """, unsafe_allow_html=True)
                 
@@ -408,3 +416,4 @@ if estrutura_file and estoque_file:
                 resultado_df.to_excel(buffer, index=False)
                 buffer.seek(0)
                 st.download_button("⬇️ Baixar Relatório Completo", data=buffer, file_name="analise_estoque.xlsx")
+
