@@ -385,30 +385,7 @@ if estrutura_file and estoque_file:
                     </div>
                     """, unsafe_allow_html=True)
 
-                # SEÇÃO: CUSTO ESTIMADO DA COMPRA (mantida)
-                if coluna_valor:
-                    st.subheader("Custo Estimado da Compra")
-                    
-                    col1, col2 = st.columns(2)
-                    
-                    with col1:
-                        st.markdown(f"""
-                        <div class="cost-container">
-                            <div class="cost-title">📦 Total de unidades para comprar</div>
-                            <div class="cost-value">{stats['total_unidades_comprar']:,} unidades</div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                    
-                    with col2:
-                        st.markdown(f"""
-                        <div class="cost-container">
-                            <div class="cost-title">Custo total estimado</div>
-                            <div class="cost-value">R$ {valor_total_estimado:,.2f}</div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                
-                else:
-                    st.info("💡 Para calcular o custo estimado da compra, inclua uma coluna de valor/custo na planilha de estoque.")
+
 
                 # POSIÇÃO ORIGINAL DOS BOTÕES
                 if st.button("🔄 Nova Análise"):
