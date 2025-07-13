@@ -1,8 +1,6 @@
-codigo_final_ajustado.py
 import streamlit as st
 import pandas as pd
 import io
-import re
 
 def extrair_sufixo_codigo(codigo):
     """
@@ -270,13 +268,6 @@ st.markdown("""
         font-size: 1.8rem;
         font-weight: bold;
         color: #155724;
-    }
-    
-    .cost-warning {
-        font-size: 0.8rem;
-        color: #856404;
-        margin-top: 0.5rem;
-        font-style: italic;
     }
     
     @media (max-width: 768px) {
