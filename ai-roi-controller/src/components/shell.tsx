@@ -183,14 +183,14 @@ function Frame({ children }: { children: ReactNode }) {
         </main>
       </div>
 
-      <nav className="glass glass-strong no-print lg:hidden fixed z-50 left-3 right-3 bottom-[calc(10px+env(safe-area-inset-bottom,0px))] grid grid-cols-5 p-1.5 rounded-[22px]" aria-label="Navegação">
+      <nav className="glass glass-strong no-print lg:hidden fixed z-50 left-3 right-3 bottom-[calc(10px+env(safe-area-inset-bottom,0px))] grid grid-cols-5 p-1.5 rounded-[26px]" aria-label="Navegação">
         {mobileNav.map((n) => (
           <Link key={n.href} href={n.href} aria-current={isActive(path, n.href) ? "page" : undefined}
-            className={cx("flex flex-col items-center justify-center gap-0.5 h-[52px] rounded-[16px] text-[10.5px] tracking-tight font-medium text-ink-2 min-w-0", isActive(path, n.href) && "bg-[var(--accent-soft)] !text-[var(--accent-ink)]")}>
+            className={cx("flex flex-col items-center justify-center gap-0.5 h-[52px] rounded-[18px] text-[10.5px] tracking-tight font-medium text-ink-2 min-w-0", isActive(path, n.href) && "tab-active")}>
             <n.icon size={20} strokeWidth={1.8} />{n.label}
           </Link>
         ))}
-        <button type="button" onClick={() => setMore(true)} className={cx("flex flex-col items-center justify-center gap-0.5 h-[52px] rounded-[16px] text-[10.5px] tracking-tight font-medium text-ink-2 min-w-0", !mobileNav.some((n) => isActive(path, n.href)) && "bg-[var(--accent-soft)] !text-[var(--accent-ink)]")}>
+        <button type="button" onClick={() => setMore(true)} className={cx("flex flex-col items-center justify-center gap-0.5 h-[52px] rounded-[18px] text-[10.5px] tracking-tight font-medium text-ink-2 min-w-0", !mobileNav.some((n) => isActive(path, n.href)) && "tab-active")}>
           <Menu size={20} strokeWidth={1.8} />Mais
         </button>
       </nav>

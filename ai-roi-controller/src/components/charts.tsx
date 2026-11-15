@@ -1,5 +1,5 @@
 "use client";
-import { Bar, CartesianGrid, ComposedChart, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, CartesianGrid, ComposedChart, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { valueOf, type Summary } from "@/domain/engine";
 import { periodLabel } from "@/domain/period";
 import { fmt, indicatorText } from "@/lib/format";
@@ -42,17 +42,20 @@ export function MoneyChart({ data, height = 280 }: { data: Point[]; height?: num
   return (
     <div style={{ height }} role="img" aria-label={`Investimento e benefício validado por mês, de ${rows[0]?.label} a ${rows[rows.length - 1]?.label}`}>
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={rows} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} barGap={2} barCategoryGap="24%">
+        <ComposedChart data={rows} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+          <defs>
+            <linearGradient id="fill-ben" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--chart-1)" stopOpacity="0.38" /><stop offset="1" stopColor="var(--chart-1)" stopOpacity="0" /></linearGradient>
+          </defs>
           <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
           <XAxis dataKey="label" tick={axis} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={18} />
           <YAxis tick={axis} tickLine={false} axisLine={false} width={54} tickFormatter={short} />
-          <Tooltip cursor={{ fill: "var(--sunken)" }} content={<Tip rows={(s) => [
+          <Tooltip cursor={{ stroke: "var(--line-strong)" }} content={<Tip rows={(s) => [
             ["Benefício validado", fmt.money(s.benefitValidated), "var(--chart-1)"],
             ["Investimento", fmt.money(s.investment), "var(--chart-2)"],
             ["ROI do mês", indicatorText(s.roi, fmt.pct).text],
           ]} />} />
-          <Bar dataKey="inv" fill="var(--chart-2)" radius={[4, 4, 0, 0]} maxBarSize={22} isAnimationActive={false} />
-          <Bar dataKey="ben" fill="var(--chart-1)" radius={[4, 4, 0, 0]} maxBarSize={22} isAnimationActive={false} />
+          <Area dataKey="ben" type="monotone" stroke="var(--chart-1)" strokeWidth={2.4} fill="url(#fill-ben)" dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: "var(--solid)" }} isAnimationActive={false} />
+          <Line dataKey="inv" type="monotone" stroke="var(--chart-2)" strokeWidth={2} strokeDasharray="5 4" dot={false} activeDot={{ r: 4, strokeWidth: 2, stroke: "var(--solid)" }} isAnimationActive={false} />
         </ComposedChart>
       </ResponsiveContainer>
     </div>
