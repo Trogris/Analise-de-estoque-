@@ -1,8 +1,10 @@
 # AI ROI Controller — Fase 1: Arquitetura e Planejamento
 
-> Status: **aguardando aprovação**. Nenhuma tela ou código de aplicação foi criado.
-> A implementação (Fase 2) só começa depois da aprovação deste documento e das
-> decisões listadas na seção 10.3.
+> Status: **em implementação**. Decisão posterior a este plano: nesta fase o banco de
+> dados é o **Google Planilhas** (não Supabase), com uma senha de acesso para a equipe.
+> O modelo PostgreSQL, a autenticação por usuário e o RLS descritos abaixo continuam
+> sendo o destino da fase multiempresa; a camada de dados foi isolada para essa troca.
+> O que já está pronto e os limites atuais estão no [`README`](../README.md).
 
 Princípio do produto: transformar o uso de inteligência artificial em resultados
 operacionais e financeiros **mensuráveis e rastreáveis**. Unidade de análise:
