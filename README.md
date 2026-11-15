@@ -32,3 +32,11 @@ Prefixos permitidos:
 - `RP`: Componentes Reparados (uso direto apenas em PL)
 
 Consulte o código para regras de transposição entre prefixos.
+
+---
+
+## AI ROI Controller
+
+A pasta [`ai-roi-controller/`](ai-roi-controller/) contém um produto separado: uma aplicação
+Next.js para medir o retorno dos investimentos em inteligência artificial. Veja o
+[README](ai-roi-controller/README.md) dela. O app de Análise de Estoque (`app.py`) não foi alterado.
