@@ -49,7 +49,7 @@ export default function Maturidade() {
   }
   return (
     <>
-      <PageHeader title="Maturidade em IA" subtitle={`Uma nota de 0 a 100 por departamento e o que as áreas de maior resultado fazem diferente. Período: ${periodLabel(scope.from)} a ${periodLabel(scope.to)}.`} />
+      <PageHeader eyebrow="Benchmark interno" title="Maturidade em IA" subtitle={`Uma nota de 0 a 100 por departamento e o que as áreas de maior resultado fazem diferente. Período: ${periodLabel(scope.from)} a ${periodLabel(scope.to)}.`} />
       <FilterBar dimensions={false} />
 
       <div className="enter grid gap-4 lg:gap-5 xl:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
@@ -57,7 +57,7 @@ export default function Maturidade() {
           <span className="relative z-[1] text-[13px] font-semibold uppercase tracking-[0.08em] on-hero-2">Índice de maturidade da empresa</span>
           <div className="relative z-[1] mt-4 flex items-end gap-3">
             {index !== null ? (<>
-              <span className="text-[72px] font-semibold tracking-[-0.04em] leading-none num">{index}</span>
+              <span className="hero-num display text-[84px] sm:text-[96px] leading-[0.95] num">{index}</span>
               <span className="on-hero-2 text-[17px] mb-2">de 100</span>
             </>) : <span className="text-[28px] font-semibold leading-tight">Dados insuficientes</span>}
           </div>

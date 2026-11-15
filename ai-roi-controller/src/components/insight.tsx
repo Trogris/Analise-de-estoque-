@@ -1,6 +1,6 @@
 "use client";
 import { ArrowDownRight, ArrowUpRight, ChevronRight, CircleHelp, Minus } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { SourcePill } from "@/components/crud";
 import { COST_CATEGORIES } from "@/data/schema";
 import { useStore } from "@/data/store";
@@ -9,11 +9,54 @@ import { periodLabel } from "@/domain/period";
 import { fmt, indicatorText, type Fmt } from "@/lib/format";
 import { cx, Drawer, Pill } from "./ui";
 
+/** Conta do valor anterior até o novo em ~0,6 s. Sem animação para quem pediu menos movimento. */
+function AnimatedNumber({ value, format, className }: { value: number; format: Fmt; className?: string }) {
+  const [shown, setShown] = useState(value);
+  const from = useRef(value);
+  useEffect(() => {
+    const start = from.current, delta = value - start;
+    if (!delta || window.matchMedia("(prefers-reduced-motion: reduce)").matches) { from.current = value; setShown(value); return; }
+    let raf = 0;
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      const k = Math.min(1, (now - t0) / 600);
+      const v = start + delta * (1 - Math.pow(1 - k, 3));
+      from.current = v;
+      setShown(k === 1 ? value : v);
+      if (k < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
+  return <span className={cx("num", className)}>{format(shown)}</span>;
+}
+
+/** Tendência mensal do indicador. Meses sem valor são pulados, nunca tratados como zero. */
+export function Spark({ values, tone }: { values: (number | null)[]; tone?: "pos" | "neg" }) {
+  const id = useId();
+  const pts = values.map((v, i) => [i, v] as const).filter((p): p is readonly [number, number] => p[1] !== null);
+  if (pts.length < 2) return null;
+  const min = Math.min(...pts.map((p) => p[1])), max = Math.max(...pts.map((p) => p[1]));
+  const W = 96, H = 30, n = values.length - 1;
+  const xy = pts.map(([i, v]) => [(i / n) * W, max === min ? H / 2 : H - 3 - ((v - min) / (max - min)) * (H - 6)]);
+  const line = xy.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
+  const color = tone === "pos" ? "var(--pos)" : tone === "neg" ? "var(--neg)" : "var(--chart-1)";
+  const [lx, ly] = xy[xy.length - 1];
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="flex-none overflow-visible" aria-hidden>
+      <defs><linearGradient id={id} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={color} stopOpacity="0.28" /><stop offset="1" stopColor={color} stopOpacity="0" /></linearGradient></defs>
+      <path d={`${line} L${lx.toFixed(1)} ${H} L${xy[0][0].toFixed(1)} ${H} Z`} fill={`url(#${id})`} />
+      <path d={line} fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={lx} cy={ly} r="2.6" fill={color} stroke="var(--solid)" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
 /** Valor de indicador: número quando há dados; estado explicado quando não há. */
 export function IndicatorValue({ value, format, className }: { value: Indicator | number; format: Fmt; className?: string }) {
-  if (typeof value === "number") return <span className={cx("num", className)}>{format(value)}</span>;
+  if (typeof value === "number") return <AnimatedNumber value={value} format={format} className={className} />;
   const t = indicatorText(value, format);
-  if (t.ok) return <span className={cx("num", className)}>{t.text}</span>;
+  if (value.state === "ok") return <AnimatedNumber value={value.value} format={format} className={className} />;
   return <span className="inline-flex items-center gap-1 text-ink-3 font-medium text-[0.62em] leading-tight" title={t.hint}>{t.text}<CircleHelp size={13} aria-hidden /><span className="sr-only">{t.hint}</span></span>;
 }
 
@@ -33,18 +76,21 @@ export function Delta({ cur, prev, invert, neutral, mode = "pct" }: { cur: numbe
   );
 }
 
-export function Kpi({ label, icon, value, format, sub, delta, onTrace, tone }: {
-  label: string; icon: ReactNode; value: Indicator | number; format: Fmt; sub?: ReactNode; delta?: ReactNode; onTrace?: () => void; tone?: "pos" | "neg";
+export function Kpi({ label, icon, value, format, sub, delta, onTrace, tone, trend }: {
+  label: string; icon: ReactNode; value: Indicator | number; format: Fmt; sub?: ReactNode; delta?: ReactNode; onTrace?: () => void; tone?: "pos" | "neg"; trend?: (number | null)[];
 }) {
   const body = (
     <>
       <div className="flex items-center gap-2 text-ink-2 text-[13px] font-medium">
-        <span className="grid place-items-center w-7 h-7 rounded-[9px] bg-[var(--accent-soft)] text-[var(--accent-ink)] flex-none">{icon}</span>
+        <span className="kpi-ico grid place-items-center w-8 h-8 rounded-[11px] flex-none">{icon}</span>
         <span className="flex-1 min-w-0 leading-tight">{label}</span>
         {onTrace ? <ChevronRight size={15} className="text-ink-3 flex-none opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" aria-hidden /> : null}
       </div>
-      <div className={cx("text-[25px] sm:text-[28px] font-semibold tracking-tight leading-none mt-3 min-h-[30px] flex items-center", tone === "pos" && "text-pos", tone === "neg" && "text-neg")}>
-        <IndicatorValue value={value} format={format} />
+      <div className="flex items-end justify-between gap-2 mt-3.5">
+        <div className={cx("display text-[27px] sm:text-[32px] leading-none min-h-[32px] flex items-center min-w-0", tone === "pos" && "text-pos", tone === "neg" && "text-neg")}>
+          <IndicatorValue value={value} format={format} />
+        </div>
+        {trend ? <span className="hidden sm:block"><Spark values={trend} tone={tone} /></span> : null}
       </div>
       <div className="mt-2 min-h-[18px] text-[12.5px] text-ink-3 leading-snug">{delta ?? sub}</div>
       {delta && sub ? <div className="text-[12.5px] text-ink-3 leading-snug mt-0.5">{sub}</div> : null}
@@ -52,8 +98,8 @@ export function Kpi({ label, icon, value, format, sub, delta, onTrace, tone }: {
   );
   return onTrace ? (
     <button type="button" onClick={onTrace} aria-label={`${label}: ver origem dos dados`}
-      className="glass group text-left p-4 transition-transform duration-200 hover:-translate-y-0.5 focus-visible:-translate-y-0.5">{body}</button>
-  ) : <div className="glass p-4">{body}</div>;
+      className="glass lift group text-left p-4 sm:p-5">{body}</button>
+  ) : <div className="glass p-4 sm:p-5">{body}</div>;
 }
 
 function Formula({ children }: { children: ReactNode }) {

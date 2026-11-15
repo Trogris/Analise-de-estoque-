@@ -176,12 +176,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 }
 
 /* ---------- Cabeçalho de página ---------- */
-export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
+export function PageHeader({ title, subtitle, actions, eyebrow }: { title: string; subtitle?: ReactNode; actions?: ReactNode; eyebrow?: string }) {
   return (
     <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
       <div className="min-w-0 flex-1 basis-64">
-        <h1 className="text-[26px] sm:text-[30px] font-semibold leading-tight">{title}</h1>
-        {subtitle ? <p className="text-ink-2 mt-1 max-w-[70ch]">{subtitle}</p> : null}
+        {eyebrow ? <div className="eyebrow mb-1.5">{eyebrow}</div> : null}
+        <h1 className="display grad-text text-[32px] sm:text-[46px] leading-[1.05] pb-1">{title}</h1>
+        {subtitle ? <p className="text-ink-2 mt-1.5 max-w-[62ch] text-[16px] sm:text-[17px] leading-snug">{subtitle}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap gap-2 no-print">{actions}</div> : null}
     </div>

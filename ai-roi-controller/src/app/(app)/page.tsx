@@ -95,21 +95,21 @@ export default function Painel() {
 
   return (
     <>
-      <PageHeader title="Painel executivo" subtitle={`Retorno dos investimentos em IA de ${periodLabel(scope.from)} a ${periodLabel(scope.to)}.`}
+      <PageHeader eyebrow="Visão executiva" title="O retorno da sua IA, em números." subtitle={`Investimento, benefício validado e produtividade de ${periodLabel(scope.from)} a ${periodLabel(scope.to)}.`}
         actions={<Link href="/relatorio" className="btn btn-ghost">Gerar relatório<ArrowRight size={15} /></Link>} />
       <Onboarding />
       {hasData ? (<>
         <FilterBar />
         <div className="enter flex flex-col gap-4 lg:gap-5">
           <div className="grid gap-4 lg:gap-5 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-            <button type="button" onClick={() => setTrace("roi")} aria-label="ROI consolidado: ver origem dos dados" className="hero text-left p-5 sm:p-6 flex flex-col min-h-[300px] transition-transform duration-200 hover:-translate-y-0.5">
+            <button type="button" onClick={() => setTrace("roi")} aria-label="ROI consolidado: ver origem dos dados" className="hero text-left p-6 sm:p-7 flex flex-col min-h-[330px] transition-transform duration-300 hover:-translate-y-1">
               <div className="flex items-center justify-between gap-3 relative z-[1]">
                 <span className="text-[13px] font-semibold uppercase tracking-[0.08em] on-hero-2">ROI consolidado</span>
                 <span className="hero-chip">{periodLabel(scope.from)} – {periodLabel(scope.to)}</span>
               </div>
               <div className="relative z-[1] mt-5">
                 {roi !== null ? (
-                  <div className="text-[58px] sm:text-[72px] font-semibold tracking-[-0.04em] leading-none num">{roiText.text}</div>
+                  <div className="hero-num display text-[68px] sm:text-[92px] leading-[0.95] num">{roiText.text}</div>
                 ) : (
                   <div><div className="text-[30px] sm:text-[34px] font-semibold leading-tight">{roiText.text}</div><p className="on-hero-2 mt-2 max-w-[40ch] text-[14.5px]">{roiText.hint}</p></div>
                 )}
@@ -127,13 +127,13 @@ export default function Painel() {
               </dl>
             </button>
             <div className="grid grid-cols-2 gap-4 lg:gap-5">
-              <Kpi label="Investimento total em IA" icon={<CircleDollarSign size={16} />} value={s.investment} format={fmt.moneyShort} onTrace={() => setTrace("investment")}
+              <Kpi label="Investimento total em IA" icon={<CircleDollarSign size={16} />} value={s.investment} format={fmt.moneyShort} onTrace={() => setTrace("investment")} trend={series.map((m) => m.summary.investment)}
                 delta={<Delta cur={s.investment} prev={p(prev.investment)} neutral />} />
-              <Kpi label="Benefício financeiro realizado" icon={<PiggyBank size={16} />} value={s.benefitValidated} format={fmt.moneyShort} tone={s.benefitValidated > 0 ? "pos" : undefined} onTrace={() => setTrace("benefit")}
+              <Kpi label="Benefício financeiro realizado" icon={<PiggyBank size={16} />} value={s.benefitValidated} format={fmt.moneyShort} tone={s.benefitValidated > 0 ? "pos" : undefined} onTrace={() => setTrace("benefit")} trend={series.map((m) => m.summary.benefitValidated)}
                 delta={<Delta cur={s.benefitValidated} prev={p(prev.benefitValidated)} />} sub={s.benefitPending > 0 ? `${fmt.moneyShort(s.benefitPending)} aguardando validação` : undefined} />
-              <Kpi label="Horas produtivas liberadas" icon={<Clock size={16} />} value={s.hoursSaved} format={fmt.hours} tone={s.hoursSaved < 0 ? "neg" : undefined} onTrace={() => setTrace("hours")}
+              <Kpi label="Horas produtivas liberadas" icon={<Clock size={16} />} value={s.hoursSaved} format={fmt.hours} tone={s.hoursSaved < 0 ? "neg" : undefined} onTrace={() => setTrace("hours")} trend={series.map((m) => (m.summary.measurements.length ? m.summary.hoursSaved : null))}
                 delta={<Delta cur={s.hoursSaved} prev={p(prev.hoursSaved)} />} sub={`${fmt.moneyShort(s.capacityValue)} em capacidade (não é caixa)`} />
-              <Kpi label="Custo por entrega aprovada" icon={<Receipt size={16} />} value={s.costPerApproved} format={fmt.money} onTrace={() => setTrace("quality")}
+              <Kpi label="Custo por entrega aprovada" icon={<Receipt size={16} />} value={s.costPerApproved} format={fmt.money} onTrace={() => setTrace("quality")} trend={series.map((m) => valueOf(m.summary.costPerApproved))}
                 delta={valueOf(s.costPerApproved) !== null ? <Delta cur={valueOf(s.costPerApproved)} prev={p(valueOf(prev.costPerApproved))} invert /> : undefined}
                 sub={s.costPerApproved.state !== "ok" ? indicatorText(s.costPerApproved, fmt.money).hint : undefined} />
             </div>
@@ -156,7 +156,7 @@ export default function Painel() {
                   <p className="text-ink-3 text-[13px]">{chart === "money" ? "Investimento e benefício financeiro validado" : "ROI de cada mês; meses sem dados suficientes ficam em branco"}</p></div>
                 <Segmented label="Tipo de gráfico" value={chart} onChange={setChart} options={[["money", "Valores"], ["roi", "ROI"]]} />
               </div>
-              {chart === "money" ? (<><Legend items={[["Benefício validado", "var(--chart-1)"], ["Investimento", "var(--chart-2)"]]} /><div className="mt-2"><MoneyChart data={series} /></div></>) : <RoiChart data={series} />}
+              {chart === "money" ? (<><Legend items={[["Benefício validado", "var(--chart-1)", true], ["Investimento", "var(--chart-2)", true]]} /><div className="mt-2"><MoneyChart data={series} /></div></>) : <RoiChart data={series} />}
             </section>
 
             <section className="solid p-4 sm:p-5 flex flex-col">
