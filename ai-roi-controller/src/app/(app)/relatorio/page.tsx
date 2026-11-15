@@ -8,6 +8,7 @@ import { BENEFIT_CATEGORIES, COST_CATEGORIES } from "@/data/schema";
 import { useStore } from "@/data/store";
 import { groupBy, monthly, summarize, valueOf, type Indicator, type Summary } from "@/domain/engine";
 import { buildInsights } from "@/domain/insights";
+import { companyIndex, DIMENSIONS, levelOf, maturity } from "@/domain/maturity";
 import { periodLabel } from "@/domain/period";
 import { downloadWorkbook, type SheetSpec } from "@/lib/excel";
 import { fmt, indicatorText, type Fmt } from "@/lib/format";
@@ -51,6 +52,7 @@ export default function Relatorio() {
   const depts = useMemo(() => groupBy(db, scope, "department"), [db, scope]);
   const tools = useMemo(() => groupBy(db, scope, "tool"), [db, scope]);
   const procs = useMemo(() => groupBy(db, scope, "process").sort((a, b) => b.summary.hoursSaved - a.summary.hoursSaved), [db, scope]);
+  const mat = useMemo(() => maturity(db, scope).sort((a, b) => (b.score ?? -1) - (a.score ?? -1)), [db, scope]);
   const insights = useMemo(() => buildInsights(db, scope, new Date().toISOString().slice(0, 10)), [db, scope]);
   const org = db.org[0];
   const filters = [
@@ -97,6 +99,10 @@ export default function Relatorio() {
         {
           name: "Evolução mensal", columns: [{ header: "Mês" }, { header: "Investimento", numFmt: BRL }, { header: "Benefício validado", numFmt: BRL }, { header: "ROI", numFmt: PCT }, { header: "Horas liberadas", numFmt: "#,##0.0" }],
           rows: series.map((m) => [m.period, m.summary.investment, m.summary.benefitValidated, raw(m.summary.roi), m.summary.hoursSaved]),
+        },
+        {
+          name: "Maturidade", columns: [{ header: "Departamento", width: 30 }, { header: "Índice (0–100)" }, { header: "Nível", width: 22 }, ...DIMENSIONS.flatMap((d) => [{ header: `${d.label} (nota)` }, { header: d.measure, numFmt: PCT, width: 26 }])],
+          rows: mat.map((r) => [r.name, r.score ?? "Dados insuficientes", r.score !== null ? levelOf(r.score).label : "", ...DIMENSIONS.flatMap((d) => [r.dimensions[d.key].score ?? "Sem dados", r.dimensions[d.key].value ?? ""])]),
         },
         { name: "Recomendações", columns: [{ header: "Recomendação", width: 60 }, { header: "Detalhe", width: 120 }], rows: insights.map((i) => [i.title, i.detail]) },
         {
@@ -152,6 +158,19 @@ export default function Relatorio() {
           <GroupTable title="Investimento e benefício por departamento" label="Departamento" rows={[...depts].sort((a, b) => b.summary.benefitValidated - a.summary.benefitValidated)} />
           <GroupTable title="Ferramentas com melhor retorno" label="Ferramenta" rows={[...tools].sort((a, b) => (valueOf(b.summary.roi) ?? -Infinity) - (valueOf(a.summary.roi) ?? -Infinity))} />
           <GroupTable title="Processos mais produtivos" label="Processo" rows={procs.slice(0, 10)} />
+
+          <section>
+            <h2 className="text-[16px] font-semibold mb-2">Maturidade em IA por departamento{companyIndex(mat) !== null ? <span className="font-normal text-ink-3"> · índice da empresa: {companyIndex(mat)} de 100</span> : null}</h2>
+            <div className="table-wrap border border-line !rounded-[14px]">
+              <table className="table"><thead><tr><th>Departamento</th><th className="r">Índice</th><th>Nível</th>{DIMENSIONS.map((d) => <th key={d.key} className="r">{d.label}</th>)}</tr></thead>
+                <tbody>{mat.map((r) => (
+                  <tr key={r.id}><td className="font-medium">{r.name}</td><td className="r font-semibold">{r.score ?? "—"}</td>
+                    <td>{r.score !== null ? <Pill tone={levelOf(r.score).tone}>{levelOf(r.score).label}</Pill> : <span className="text-ink-3">Dados insuficientes</span>}</td>
+                    {DIMENSIONS.map((d) => <td key={d.key} className="r">{r.dimensions[d.key].score ?? <span className="text-ink-3">—</span>}</td>)}</tr>
+                ))}</tbody></table>
+            </div>
+            <p className="text-[12.5px] text-ink-3 mt-1.5">Nota de 0 a 100, média das dimensões com dados (mínimo de três). Critérios detalhados na tela Maturidade.</p>
+          </section>
 
           <div className="grid gap-7 lg:grid-cols-2">
             <section>

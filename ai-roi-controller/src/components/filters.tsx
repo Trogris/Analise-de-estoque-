@@ -33,7 +33,7 @@ export function FiltersProvider({ children }: { children: ReactNode }) {
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
-export function FilterBar({ process = true }: { process?: boolean }) {
+export function FilterBar({ process = true, dimensions = true }: { process?: boolean; dimensions?: boolean }) {
   const { db } = useStore();
   const f = useFilters();
   const presets: [Preset, string][] = [["3", "3 meses"], ["6", "6 meses"], ["12", "12 meses"], ["all", "Tudo"], ["custom", "Personalizado"]];
@@ -54,7 +54,7 @@ export function FilterBar({ process = true }: { process?: boolean }) {
           <input type="month" className="input !w-[150px]" aria-label="Até" value={f.to} min={f.from || undefined} onChange={(e) => f.set({ to: e.target.value })} />
         </div>
       ) : null}
-      <div className="flex flex-wrap gap-2 flex-1 basis-64 justify-end">
+      {dimensions ? <div className="flex flex-wrap gap-2 flex-1 basis-64 justify-end">
         <select className="input !w-auto flex-1 basis-40 sm:max-w-[220px]" aria-label="Departamento" value={f.departmentId} onChange={(e) => f.set({ departmentId: e.target.value, processId: "" })}>
           <option value="">Todos os departamentos</option>
           {db.departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
@@ -70,7 +70,7 @@ export function FilterBar({ process = true }: { process?: boolean }) {
           </select>
         ) : null}
         {active ? <button type="button" className="btn btn-plain btn-sm self-center" onClick={() => f.set({ departmentId: "", toolId: "", processId: "" })}>Limpar</button> : null}
-      </div>
+      </div> : null}
     </div>
   );
 }

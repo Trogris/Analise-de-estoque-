@@ -1,6 +1,6 @@
 "use client";
 import {
-  Building2, Cloud, Database, FileBarChart2, HardDrive, LayoutDashboard, Loader2, LogOut, Menu, Moon, RefreshCw,
+  Award, Building2, Cloud, Database, FileBarChart2, HardDrive, LayoutDashboard, Loader2, LogOut, Menu, Moon, RefreshCw,
   Search, Settings, Sparkles, Sun, TriangleAlert, Wallet, Workflow, type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -13,6 +13,7 @@ import { Button, Confirm, cx, Dialog, Skeleton, ToastProvider, useToast } from "
 
 export const NAV: { href: string; label: string; icon: LucideIcon; hint: string }[] = [
   { href: "/", label: "Painel", icon: LayoutDashboard, hint: "ROI consolidado e indicadores" },
+  { href: "/maturidade", label: "Maturidade", icon: Award, hint: "Índice de maturidade e benchmark entre áreas" },
   { href: "/departamentos", label: "Departamentos", icon: Building2, hint: "Estrutura e resultado por área" },
   { href: "/ferramentas", label: "Ferramentas", icon: Sparkles, hint: "Ferramentas, contratos, rateio e uso" },
   { href: "/processos", label: "Processos", icon: Workflow, hint: "Processos com IA e medições" },
@@ -109,7 +110,7 @@ function Frame({ children }: { children: ReactNode }) {
     setRefreshing(false);
     toast(store.loadError ? "error" : "ok", store.loadError ?? (sheets ? "Dados recarregados do Google Planilhas." : "Dados recarregados."));
   };
-  const mobileNav = [NAV[0], NAV[3], NAV[4], NAV[6]];
+  const mobileNav = [NAV[0], NAV[1], NAV[4], NAV[5]];
 
   return (
     <div className="relative z-[1] min-h-dvh lg:grid lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-5 lg:p-5 print-root">
