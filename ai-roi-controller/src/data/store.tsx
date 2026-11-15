@@ -6,6 +6,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { emptyDb, type Database, type TableKey } from "@/domain/types";
 import { uid } from "@/lib/format";
+import { buildDemo } from "./demo";
 import { applyMutations, type Mutation } from "./mutations";
 import { referencesTo, TABLES, validate, type Row } from "./schema";
 
@@ -13,6 +14,8 @@ export type Mode = "local" | "sheets";
 interface Gateway { load(): Promise<Database>; apply(muts: Mutation[]): Promise<void> }
 
 const LOCAL_KEY = "ai-roi-controller:db:v1";
+/** Marca que a pessoa já removeu os dados de exemplo — eles não voltam sozinhos. */
+export const DEMO_DISMISSED_KEY = "ai-roi-controller:demo-dismissed";
 const localGateway: Gateway = {
   async load() {
     try {
@@ -90,6 +93,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (s.mode === "sheets") { gateway.current = sheetsGateway; setMode("sheets"); }
         setInfo({ protectedAccess: s.protected, serviceAccount: s.serviceAccount });
       } catch { /* sem servidor de API: segue em modo local */ }
+      // Primeira visita em modo local, sem nenhum dado: abre com a empresa fictícia de exemplo,
+      // sempre identificada como tal. Nunca acontece com o Google Planilhas conectado.
+      if (gateway.current === localGateway) {
+        try {
+          const empty = Object.values(await localGateway.load()).every((rows) => (rows as unknown[]).length === 0);
+          if (empty && !localStorage.getItem(DEMO_DISMISSED_KEY)) await localGateway.apply(buildDemo());
+        } catch { /* sem armazenamento: abre vazio */ }
+      }
       await reload();
     })();
   }, [reload]);

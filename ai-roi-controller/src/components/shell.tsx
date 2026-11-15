@@ -1,18 +1,19 @@
 "use client";
 import {
-  Building2, Cloud, Database, FileBarChart2, HardDrive, LayoutDashboard, Loader2, LogOut, Menu, Moon, RefreshCw,
+  Award, Building2, Cloud, Database, FileBarChart2, HardDrive, LayoutDashboard, Loader2, LogOut, Menu, Moon, RefreshCw,
   Search, Settings, Sparkles, Sun, TriangleAlert, Wallet, Workflow, type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import { removeDemo } from "@/data/demo";
-import { StoreProvider, useStore } from "@/data/store";
+import { DEMO_DISMISSED_KEY, StoreProvider, useStore } from "@/data/store";
 import { FiltersProvider } from "./filters";
 import { Button, Confirm, cx, Dialog, Skeleton, ToastProvider, useToast } from "./ui";
 
 export const NAV: { href: string; label: string; icon: LucideIcon; hint: string }[] = [
   { href: "/", label: "Painel", icon: LayoutDashboard, hint: "ROI consolidado e indicadores" },
+  { href: "/maturidade", label: "Maturidade", icon: Award, hint: "Índice de maturidade e benchmark entre áreas" },
   { href: "/departamentos", label: "Departamentos", icon: Building2, hint: "Estrutura e resultado por área" },
   { href: "/ferramentas", label: "Ferramentas", icon: Sparkles, hint: "Ferramentas, contratos, rateio e uso" },
   { href: "/processos", label: "Processos", icon: Workflow, hint: "Processos com IA e medições" },
@@ -109,7 +110,7 @@ function Frame({ children }: { children: ReactNode }) {
     setRefreshing(false);
     toast(store.loadError ? "error" : "ok", store.loadError ?? (sheets ? "Dados recarregados do Google Planilhas." : "Dados recarregados."));
   };
-  const mobileNav = [NAV[0], NAV[3], NAV[4], NAV[6]];
+  const mobileNav = [NAV[0], NAV[1], NAV[4], NAV[5]];
 
   return (
     <div className="relative z-[1] min-h-dvh lg:grid lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-5 lg:p-5 print-root">
@@ -207,6 +208,7 @@ function Frame({ children }: { children: ReactNode }) {
       <Confirm open={dropDemo} onClose={() => setDropDemo(false)} title="Remover dados de exemplo?" confirmLabel="Remover"
         onConfirm={async () => {
           const r = await store.commit(removeDemo(store.db));
+          if (r.ok) { try { localStorage.setItem(DEMO_DISMISSED_KEY, "1"); } catch { /* segue sem lembrar */ } }
           toast(r.ok ? "ok" : "error", r.ok ? "Dados de exemplo removidos. Seus cadastros reais foram mantidos." : r.message);
           setDropDemo(false);
         }}>

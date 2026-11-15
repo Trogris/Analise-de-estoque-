@@ -265,4 +265,4 @@ textarea.input { min-height: 76px; resize: vertical; }
 }
 
 /* Conteúdo largo (tabelas) rola dentro do próprio bloco, nunca a página. */
-#conteudo > * { min-width: 0; }
+#conteudo > *, .solid, .hero { min-width: 0; }

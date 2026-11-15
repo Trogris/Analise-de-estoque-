@@ -55,6 +55,7 @@ recusa a servir dados.
 | Importação CSV/Excel com validação, duplicidades, histórico e desfazer | Pronto |
 | Relatório executivo: Excel e PDF (pelo diálogo de impressão do navegador) | Pronto |
 | Recomendações baseadas nos dados | Pronto |
+| Índice de maturidade em IA por departamento e benchmark interno | Pronto, com testes |
 | Auditoria de ações | Pronto |
 | Tema claro e escuro, responsivo, navegação por teclado | Pronto |
 | Google Planilhas como banco | Pronto; **não testado contra a API real** (ver abaixo) |
