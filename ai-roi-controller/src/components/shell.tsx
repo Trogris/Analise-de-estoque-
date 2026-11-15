@@ -7,7 +7,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import { removeDemo } from "@/data/demo";
-import { StoreProvider, useStore } from "@/data/store";
+import { DEMO_DISMISSED_KEY, StoreProvider, useStore } from "@/data/store";
 import { FiltersProvider } from "./filters";
 import { Button, Confirm, cx, Dialog, Skeleton, ToastProvider, useToast } from "./ui";
 
@@ -208,6 +208,7 @@ function Frame({ children }: { children: ReactNode }) {
       <Confirm open={dropDemo} onClose={() => setDropDemo(false)} title="Remover dados de exemplo?" confirmLabel="Remover"
         onConfirm={async () => {
           const r = await store.commit(removeDemo(store.db));
+          if (r.ok) { try { localStorage.setItem(DEMO_DISMISSED_KEY, "1"); } catch { /* segue sem lembrar */ } }
           toast(r.ok ? "ok" : "error", r.ok ? "Dados de exemplo removidos. Seus cadastros reais foram mantidos." : r.message);
           setDropDemo(false);
         }}>
