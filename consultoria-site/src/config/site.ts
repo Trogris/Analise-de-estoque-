@@ -19,7 +19,9 @@ export const brand = {
   description:
     "Consultoria brasileira de inteligência artificial aplicada à produtividade. Diagnóstico de processos, implementação de assistentes e automações e medição do retorno, para indústrias, distribuidoras e empresas de serviços.",
   /** PROVISÓRIO: defina NEXT_PUBLIC_SITE_URL com o domínio definitivo. */
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  url:
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000"),
   locale: "pt_BR",
 };
 

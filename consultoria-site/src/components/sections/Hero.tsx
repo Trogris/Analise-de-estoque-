@@ -7,6 +7,7 @@ import { useRef } from "react";
 import { hero, media } from "@/config/site";
 import { FlowCanvas } from "../FlowCanvas";
 import { Frame } from "../ui/Frame";
+import { Magnetic } from "../ui/Magnetic";
 import { RevealLines } from "../ui/RevealLines";
 import { EASE } from "../ui/motion";
 
@@ -88,13 +89,15 @@ export function Hero() {
           >
             <div className="flex flex-col gap-6 lg:col-span-5">
               <p className="t-body max-w-md text-fog lg:text-[1.2rem]">{hero.sub}</p>
-              <a href="#solucoes" className="btn self-start">
+              <Magnetic className="self-start">
+              <a href="#solucoes" className="btn">
                 <span className="roll">
                   <span>{hero.cta}</span>
                   <span aria-hidden>{hero.cta}</span>
                 </span>
                 <ArrowDown className="size-4" strokeWidth={2.5} aria-hidden />
               </a>
+              </Magnetic>
             </div>
             <Frame className="hidden text-fog lg:col-span-3 lg:col-start-10 lg:block" tab={<span className="text-accent">Como atuamos</span>}>
               <ol className="flex flex-col gap-2 p-4 pb-2">

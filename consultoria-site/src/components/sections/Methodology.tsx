@@ -25,7 +25,7 @@ export function Methodology() {
                 lines={[
                   "Quatro verbos.",
                   <span key="b" className="t-serif normal-case [letter-spacing:-0.02em]">
-                    Um ciclo que <em className="text-accent">se repete.</em>
+                    Um ciclo que <em className="mark">se repete.</em>
                   </span>,
                 ]}
               />
@@ -38,10 +38,10 @@ export function Methodology() {
           <ol ref={ref} className="relative grid grid-cols-1 gap-y-14 lg:grid-cols-4 lg:gap-x-6">
             {/* Linha de progresso: horizontal no desktop, vertical no celular */}
             <div className="absolute left-0 top-0 hidden h-px w-full bg-ink/15 lg:block" aria-hidden>
-              <motion.div style={reduce ? undefined : { scaleX: progress }} className="h-[3px] origin-left -translate-y-px bg-accent" />
+              <motion.div style={reduce ? undefined : { scaleX: progress }} className="h-[3px] origin-left -translate-y-px bg-ink" />
             </div>
             <div className="absolute bottom-0 left-0 top-0 w-px bg-ink/15 lg:hidden" aria-hidden>
-              <motion.div style={reduce ? undefined : { scaleY: progress }} className="h-full w-[3px] origin-top -translate-x-px bg-accent" />
+              <motion.div style={reduce ? undefined : { scaleY: progress }} className="h-full w-[3px] origin-top -translate-x-px bg-ink" />
             </div>
 
             {methodology.map((s, i) => (

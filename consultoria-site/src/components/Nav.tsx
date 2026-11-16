@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { contact, nav, whatsappHref } from "@/config/site";
 import { Brand } from "./ui/Brand";
 import { Frame } from "./ui/Frame";
+import { Magnetic } from "./ui/Magnetic";
 import { Motif } from "./ui/Motif";
 import { EASE } from "./ui/motion";
 
@@ -57,6 +58,7 @@ export function Nav() {
             <Brand />
           </a>
           <div className="pointer-events-auto flex items-center gap-2">
+            <Magnetic>
             <a href="#contato" className="btn !h-[3.1rem] !border-ink/30" onClick={(e) => go(e, "contato")}>
               <span className="roll">
                 <span>Contato</span>
@@ -64,6 +66,7 @@ export function Nav() {
               </span>
               <ArrowUpRight className="size-4" strokeWidth={2.5} aria-hidden />
             </a>
+            </Magnetic>
             <button
               ref={toggle}
               type="button"
@@ -71,7 +74,7 @@ export function Nav() {
               aria-controls="menu"
               aria-label={open ? "Fechar menu" : "Abrir menu"}
               onClick={() => setOpen((v) => !v)}
-              className="relative grid size-[3.1rem] cursor-pointer place-items-center rounded-[0.4rem] bg-bone text-ink"
+              className="relative grid size-[3.1rem] cursor-pointer place-items-center rounded-[0.4rem] border border-ink/25 bg-bone text-ink"
             >
               <span
                 className={`absolute h-[2px] w-5 bg-current transition-transform duration-500 ease-brand ${open ? "rotate-45" : "-translate-y-[4px]"}`}

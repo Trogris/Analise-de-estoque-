@@ -1,3 +1,4 @@
+import { Cursor } from "@/components/Cursor";
 import { Loader } from "@/components/Loader";
 import { Nav } from "@/components/Nav";
 import { ScrollIndicator } from "@/components/ScrollIndicator";
@@ -17,6 +18,7 @@ export default function Home() {
       <Loader />
       <Nav />
       <ScrollIndicator />
+      <Cursor />
       <main id="conteudo">
         <Hero />
         <Statement />

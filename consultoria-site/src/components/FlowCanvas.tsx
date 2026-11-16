@@ -21,6 +21,13 @@ export function FlowCanvas({ className = "" }: { className?: string }) {
     let h = 0;
     let raf = 0;
     let visible = true;
+    // Ponteiro suavizado: as linhas se afastam do cursor.
+    const ptr = { x: -9999, y: -9999, tx: -9999, ty: -9999 };
+    const onMove = (e: PointerEvent) => {
+      const r = canvas.getBoundingClientRect();
+      ptr.tx = e.clientX - r.left;
+      ptr.ty = e.clientY - r.top;
+    };
     let lines: { p1: number; p2: number; p3: number; f1: number; f2: number; hot: boolean }[] = [];
 
     const seed = (n: number) => {
@@ -52,6 +59,9 @@ export function FlowCanvas({ className = "" }: { className?: string }) {
     const draw = (now: number) => {
       const t = now / 1000;
       ctx.clearRect(0, 0, w, h);
+      ptr.x += (ptr.tx - ptr.x) * 0.08;
+      ptr.y += (ptr.ty - ptr.y) * 0.08;
+      const R = Math.max(120, w * 0.11);
       const n = lines.length;
       const top = h * 0.14;
       const band = h * 0.72;
@@ -65,17 +75,23 @@ export function FlowCanvas({ className = "" }: { className?: string }) {
           // Amplitude do caos: máxima à esquerda, zero a partir de ~70% da largura.
           const k = Math.min(1, u / 0.7);
           const amp = (1 - k * k * (3 - 2 * k)) * h * 0.3;
-          const y =
+          let y =
             base +
             amp *
               (Math.sin(u * 5 * l.f1 + l.p1 + t * 0.22) * 0.6 +
                 Math.sin(u * 5 * l.f2 + l.p2 - t * 0.16) * 0.3 +
                 Math.sin(u * 17 + l.p3 + t * 0.3) * 0.1);
+          const dx = x - ptr.x;
+          const dy = y - ptr.y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < R * R * 4) y += (dy >= 0 ? 1 : -1) * 46 * Math.exp(-d2 / (R * R * 0.6));
           if (x <= -step) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
         ctx.lineWidth = l.hot ? 1.4 : 1;
-        ctx.strokeStyle = l.hot ? "rgba(255,77,0,0.95)" : "rgba(241,239,232,0.17)";
+        ctx.strokeStyle = l.hot ? "rgba(200,242,48,0.95)" : "rgba(241,239,232,0.17)";
+        ctx.shadowColor = "rgba(200,242,48,0.7)";
+        ctx.shadowBlur = l.hot ? 14 : 0;
         ctx.stroke();
       }
     };
@@ -89,10 +105,14 @@ export function FlowCanvas({ className = "" }: { className?: string }) {
     ro.observe(canvas);
     const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting));
     io.observe(canvas);
-    if (!reduce) raf = requestAnimationFrame(loop);
+    if (!reduce) {
+      raf = requestAnimationFrame(loop);
+      window.addEventListener("pointermove", onMove, { passive: true });
+    }
 
     return () => {
       cancelAnimationFrame(raf);
+      window.removeEventListener("pointermove", onMove);
       ro.disconnect();
       io.disconnect();
     };

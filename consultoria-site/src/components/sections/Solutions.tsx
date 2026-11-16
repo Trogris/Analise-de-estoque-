@@ -1,6 +1,7 @@
 import { Check } from "lucide-react";
 import { audience, solutions } from "@/config/site";
 import { Frame } from "../ui/Frame";
+import { Tilt } from "../ui/Tilt";
 import { Motif } from "../ui/Motif";
 import { Reveal } from "../ui/Reveal";
 import { RevealLines } from "../ui/RevealLines";
@@ -42,6 +43,7 @@ export function Solutions() {
           {solutions.map((s, i) => (
             <li key={s.title}>
               <Reveal delay={i * 0.1} className="h-full">
+                <Tilt className="h-full">
                 <Frame className="h-full text-fog" tab={<span className="text-bone">{s.tag}</span>} style={{ "--tab": "58%" } as React.CSSProperties}>
                   <article tabIndex={0} className="flex h-full flex-col gap-8 p-5 outline-none lg:p-8">
                     <div className="flex items-start justify-between">
@@ -62,6 +64,7 @@ export function Solutions() {
                     </div>
                   </article>
                 </Frame>
+                </Tilt>
               </Reveal>
             </li>
           ))}

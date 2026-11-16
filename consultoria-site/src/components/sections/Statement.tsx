@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react";
+import { motion, useReducedMotion, useScroll, useSpring, useTransform, useVelocity, type MotionValue } from "motion/react";
 import { useRef } from "react";
 import { brand, frictions, manifesto } from "@/config/site";
 
@@ -10,10 +10,16 @@ export function Statement() {
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start 0.85", "end 0.55"] });
   const words = manifesto.split(" ");
+  // O letreiro acelera e inclina com a velocidade da rolagem.
+  const { scrollY } = useScroll();
+  const velocity = useSpring(useVelocity(scrollY), { stiffness: 60, damping: 22 });
+  const skew = useTransform(velocity, [-2500, 2500], [9, -9], { clamp: true });
+  const drift = useTransform(velocity, [-2500, 2500], [70, -70], { clamp: true });
 
   return (
     <section className="relative z-10 -mt-[20svh] rounded-t-[2rem] bg-graphite pb-28 pt-10 lg:rounded-t-[3.5rem] lg:pb-44" aria-label="Manifesto">
       <div className="overflow-hidden border-b border-steel pb-10" aria-hidden>
+        <motion.div style={reduce ? undefined : { skewX: skew, x: drift }}>
         <div className="marquee">
           {[0, 1].map((k) => (
             <div key={k} className="flex shrink-0 items-center">
@@ -26,6 +32,7 @@ export function Statement() {
             </div>
           ))}
         </div>
+        </motion.div>
       </div>
 
       <div ref={ref} className="gutter mx-auto max-w-[92rem] pt-24 lg:pt-40">

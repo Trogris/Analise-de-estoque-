@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { founder, media, type MotifKind } from "@/config/site";
 import { CountUp } from "../ui/CountUp";
 import { Frame } from "../ui/Frame";
+import { Tilt } from "../ui/Tilt";
 import { Motif } from "../ui/Motif";
 
 const CALLOUTS = founder.callouts;
@@ -85,6 +86,7 @@ export function About() {
               return (
                 <div key={label} className="contents">
                   <figure className={`w-[70vw] shrink-0 snap-start scroll-ml-5 ${SIZES[i]} ${OFFSETS[i]}`}>
+                    <Tilt max={7}>
                     <Frame
                       className="text-fog"
                       fill="var(--color-graphite)"
@@ -105,6 +107,7 @@ export function About() {
                         )}
                       </div>
                     </Frame>
+                    </Tilt>
                   </figure>
                   {i % 2 === 0 && CALLOUTS[i / 2] ? (
                     <p className="t-serif w-[76vw] shrink-0 snap-start scroll-ml-5 self-center text-[2.1rem] text-bone lg:w-[30rem] lg:text-[3.6rem]">

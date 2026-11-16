@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------
    Sistema visual
    Conceito: sala de controle industrial. Preto de fundição, osso,
-   grafite e um único laranja de sinalização. Tipografia de largura
+   grafite e um único verde-limão. Tipografia de largura
    variável: condensada no celular, plena no desktop.
    ------------------------------------------------------------------ */
 @theme {
@@ -18,7 +18,7 @@
   --color-ash: #9d9b94;
   --color-fog: #c9c7bf;
   --color-bone: #f1efe8;
-  --color-accent: #ff4d00;
+  --color-accent: #c8f230;
 
   --font-display: "Archivo Variable", "Arial Narrow", Arial, sans-serif;
   --font-serif: "Instrument Serif", "Times New Roman", serif;
@@ -113,8 +113,8 @@ body {
   letter-spacing: -0.005em;
 }
 .t-outline {
-  color: transparent;
-  -webkit-text-stroke: 1px currentColor;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1.5px currentColor;
 }
 
 /* ---------- Moldura com recorte (assinatura do layout) ---------- */
@@ -167,6 +167,53 @@ body {
 .frame:hover,
 .frame:focus-within {
   --line: var(--color-accent);
+}
+
+/* ---------- Inclinação 3D + foco de luz que segue o cursor ---------- */
+.tilt {
+  --mx: 50%;
+  --my: 50%;
+  position: relative;
+  transform: perspective(1100px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.7s var(--ease-brand);
+  will-change: transform;
+}
+.tilt.is-active {
+  transition: transform 0.12s linear;
+}
+.tilt::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s;
+  background: radial-gradient(22rem circle at var(--mx) var(--my), color-mix(in srgb, var(--color-accent) 16%, transparent), transparent 62%);
+  mix-blend-mode: screen;
+}
+.tilt.is-active::after {
+  opacity: 1;
+}
+
+/* ---------- Cursor de marca ---------- */
+.cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 90;
+  width: 2.4rem;
+  height: 2.4rem;
+  margin: -1.2rem 0 0 -1.2rem;
+  border-radius: 999px;
+  border: 1.5px solid #fff;
+  mix-blend-mode: difference;
+  pointer-events: none;
+}
+
+/* ---------- Marca-texto sobre fundo claro ---------- */
+.mark {
+  background: linear-gradient(var(--color-accent), var(--color-accent)) no-repeat 0 88% / 100% 0.34em;
+  padding: 0 0.06em;
 }
 
 /* ---------- Arco entre seções ---------- */
