@@ -52,7 +52,7 @@ export const media = {
     { src: "/media/founder-tablet.jpg", alt: "Fundador analisando informações em um tablet" },
     null,
     { src: "/media/founder-portrait.jpg", alt: "Retrato do fundador" },
-    null,
+    { src: "/media/founder-casual.jpg", alt: "Fundador de braços cruzados, sorrindo" },
     { src: "/media/founder-tablet-cutout.png", alt: "Fundador em pé, com um tablet nas mãos" },
     null,
   ] as MediaSlot[],
