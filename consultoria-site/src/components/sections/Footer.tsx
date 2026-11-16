@@ -36,8 +36,8 @@ export function Footer() {
 
               <div className="order-last col-span-2 mx-auto h-[19rem] w-full max-w-[26rem] lg:order-none lg:col-span-6 lg:h-[27rem] lg:max-w-none">
                 <ParallaxY from={70} to={0} className="relative h-full">
-                  {media.cutoutFront ? (
-                    <Image src={media.cutoutFront.src} alt={media.cutoutFront.alt} fill sizes="(min-width:1024px) 40vw, 90vw" className="object-contain object-bottom" />
+                  {media.cutFront ? (
+                    <Image src={media.cutFront.src} alt={media.cutFront.alt} fill sizes="(min-width:1024px) 40vw, 90vw" className="object-contain object-bottom [filter:drop-shadow(0_0_3rem_rgba(200,242,48,0.18))]" />
                   ) : null}
                   <a href="#contato" className="btn absolute bottom-6 left-1/2 -translate-x-1/2">
                     Falar com a consultoria

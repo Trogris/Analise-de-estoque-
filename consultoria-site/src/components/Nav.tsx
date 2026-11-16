@@ -3,12 +3,19 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
-import { contact, media, nav, whatsappHref } from "@/config/site";
+import { contact, media, nav, whatsappHref, type MediaSlot, type MotifKind } from "@/config/site";
 import { lockScroll, scrollToId } from "./SmoothScroll";
 import { Brand } from "./ui/Brand";
 import { Magnetic } from "./ui/Magnetic";
+import { Portrait } from "./ui/Portrait";
 import { EASE } from "./ui/motion";
+
+const MENU_TILES: { photo: MediaSlot; motif: MotifKind }[] = [
+  { photo: media.cutTablet, motif: "network" },
+  { photo: null, motif: "takt" },
+  { photo: media.cutFront, motif: "rings" },
+  { photo: media.cutCasual, motif: "grid" },
+];
 
 export function Nav() {
   const [open, setOpen] = useState(false);
@@ -101,22 +108,15 @@ export function Nav() {
             <div className="gutter grid min-h-full grid-cols-1 gap-10 pb-8 pt-28 lg:grid-cols-12 lg:pt-32">
               {/* Grade de fotos: a foto do link em foco ganha cor, as demais ficam em duotone */}
               <div className="hidden grid-cols-2 gap-4 self-start lg:col-span-5 lg:grid" aria-hidden>
-                {media.menu.map((src, i) => (
+                {MENU_TILES.map((t, i) => (
                   <motion.div
-                    key={src}
+                    key={i}
                     initial={reduce ? false : { opacity: 0, y: 40 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, ease: EASE, delay: 0.25 + i * 0.07 }}
-                    className="relative aspect-[10/11] overflow-hidden bg-coal"
+                    className={`transition-[filter,opacity] duration-700 ease-brand ${hover % MENU_TILES.length === i ? "" : "opacity-45 grayscale"}`}
                   >
-                    <Image
-                      src={src}
-                      alt=""
-                      fill
-                      sizes="20vw"
-                      className={`object-cover transition-[filter,transform] duration-700 ease-brand ${hover % media.menu.length === i ? "scale-105" : "opacity-70 grayscale"}`}
-                    />
-                    <div className={`absolute inset-0 bg-accent mix-blend-multiply transition-opacity duration-700 ${hover % media.menu.length === i ? "opacity-0" : "opacity-35"}`} />
+                    <Portrait photo={t.photo} motif={t.motif} live={hover % MENU_TILES.length === i} sizes="20vw" className="aspect-[10/11]" />
                   </motion.div>
                 ))}
               </div>

@@ -544,3 +544,69 @@ a.row:focus-visible::before {
   background: var(--color-accent);
   transform: rotate(45deg) scale(1.2);
 }
+
+/* ---------- Painel de retrato: escuro, com brilho, malha e varredura ---------- */
+.plate {
+  background: var(--color-coal);
+  isolation: isolate;
+}
+.plate-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--color-accent) 14%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-accent) 14%, transparent) 1px, transparent 1px);
+  background-size: 2.25rem 2.25rem;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000 20%, transparent 78%);
+  mask-image: radial-gradient(ellipse at 50% 40%, #000 20%, transparent 78%);
+}
+.plate-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(60% 50% at 50% 42%, color-mix(in srgb, var(--color-accent) 26%, transparent), transparent 70%);
+  transition: opacity 0.8s var(--ease-brand);
+  opacity: 0.75;
+}
+.group:hover .plate-glow,
+.group:focus-within .plate-glow {
+  opacity: 1;
+}
+/* A figura some na sombra, na base do painel */
+.plate-floor {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 38%;
+  pointer-events: none;
+  background: linear-gradient(to top, var(--color-coal) 4%, color-mix(in srgb, var(--color-coal) 55%, transparent) 55%, transparent);
+}
+.plate-scan {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 28%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--color-accent) 22%, transparent) 92%, var(--color-accent) 100%);
+  border-bottom: 1px solid var(--color-accent);
+  transform: translateY(-110%);
+  opacity: 0;
+}
+.group:hover .plate-scan,
+.plate-scan.is-live {
+  opacity: 0.9;
+  animation: scan 2.6s var(--ease-brand) infinite;
+}
+@keyframes scan {
+  from { transform: translateY(-110%); }
+  to { transform: translateY(380%); }
+}
+.plate-tick {
+  position: absolute;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-color: color-mix(in srgb, var(--color-accent) 80%, transparent);
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .plate-scan { display: none; }
+}
