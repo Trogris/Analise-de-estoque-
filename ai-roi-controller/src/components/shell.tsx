@@ -49,6 +49,7 @@ function Palette({ onClose, toggleTheme }: { onClose: () => void; toggleTheme: (
   const items = useMemo(() => {
     const all = [
       ...NAV.map((n) => ({ label: `Ir para ${n.label}`, hint: n.hint, icon: n.icon, run: () => router.push(n.href) })),
+      { label: "Abrir modo apresentação", hint: "História do ROI em tela cheia", icon: LayoutDashboard, run: () => router.push("/apresentacao") },
       { label: "Registrar medição de produtividade", hint: "Processos", icon: Workflow, run: () => router.push("/processos?aba=medicoes") },
       { label: "Lançar custo de IA", hint: "Financeiro", icon: Wallet, run: () => router.push("/financeiro?aba=custos") },
       { label: "Lançar benefício financeiro", hint: "Financeiro", icon: Wallet, run: () => router.push("/financeiro?aba=beneficios") },
@@ -110,6 +111,17 @@ function Frame({ children }: { children: ReactNode }) {
     setRefreshing(false);
     toast(store.loadError ? "error" : "ok", store.loadError ?? (sheets ? "Dados recarregados do Google Planilhas." : "Dados recarregados."));
   };
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      const el = (e.target as Element | null)?.closest?.(".lift") as HTMLElement | null;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+      el.style.setProperty("--my", `${e.clientY - r.top}px`);
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => window.removeEventListener("pointermove", onMove);
+  }, []);
   const mobileNav = [NAV[0], NAV[1], NAV[4], NAV[5]];
 
   return (

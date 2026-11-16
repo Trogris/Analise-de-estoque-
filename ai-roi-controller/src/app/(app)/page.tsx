@@ -1,6 +1,6 @@
 "use client";
 import {
-  ArrowRight, BadgeCheck, Check, CircleDollarSign, Clock, Lightbulb, PackageCheck, PiggyBank, Receipt, Sparkles, Users, Workflow,
+  ArrowRight, BadgeCheck, Play, Check, CircleDollarSign, Clock, Lightbulb, PackageCheck, PiggyBank, Receipt, Sparkles, Users, Workflow,
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -96,10 +96,30 @@ export default function Painel() {
   return (
     <>
       <PageHeader eyebrow="Visão executiva" title="O retorno da sua IA, em números." subtitle={`Investimento, benefício validado e produtividade de ${periodLabel(scope.from)} a ${periodLabel(scope.to)}.`}
-        actions={<Link href="/relatorio" className="btn btn-ghost">Gerar relatório<ArrowRight size={15} /></Link>} />
+        actions={hasData ? <>
+          <Link href="/apresentacao" className="btn btn-primary"><Play size={15} />Modo apresentação</Link>
+          <Link href="/relatorio" className="btn btn-ghost">Gerar relatório<ArrowRight size={15} /></Link>
+        </> : undefined} />
       <Onboarding />
       {hasData ? (<>
         <FilterBar />
+        {depts.length > 1 ? (
+          <div className="marquee glass !rounded-full py-2.5" aria-label="ROI por departamento">
+            <div className="marquee-track" style={{ "--marquee-s": `${Math.max(28, depts.length * 8)}s` } as React.CSSProperties}>
+              {[0, 1].map((copy) => (
+                <div key={copy} className="flex" aria-hidden={copy === 1}>
+                  {depts.map((d) => { const r = valueOf(d.summary.roi); return (
+                    <span key={d.id} className="flex items-center gap-2.5 px-6 whitespace-nowrap text-[13.5px]">
+                      <span className="eyebrow !text-ink-2">{d.name}</span>
+                      <span className={cx("font-semibold num", r === null ? "text-ink-3" : r >= 0 ? "text-pos" : "text-neg")}>{r === null ? "sem ROI" : `${r >= 0 ? "+" : ""}${fmt.pct(r)}`}</span>
+                      <span className="text-ink-3 num">{fmt.hours(d.summary.hoursSaved)}</span>
+                      <span className="text-ink-3" aria-hidden>✦</span>
+                    </span>); })}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
         <div className="enter flex flex-col gap-4 lg:gap-5">
           <div className="grid gap-4 lg:gap-5 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
             <button type="button" onClick={() => setTrace("roi")} aria-label="ROI consolidado: ver origem dos dados" className="hero text-left p-6 sm:p-7 flex flex-col min-h-[330px] transition-transform duration-300 hover:-translate-y-1">
