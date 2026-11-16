@@ -25,8 +25,10 @@ Os itens marcados com `PROVISÓRIO` precisam ser confirmados antes de publicar:
 ### Fotos
 
 Arquivos em `public/media`, apontados em `media` no `site.ts`. Um espaço com `null`
-exibe arte gerada em código. A abertura usa duas fotos com o mesmo enquadramento do rosto: `media.hero` (base) e
-`media.heroReveal` (camada revelada pela máscara que segue o cursor).
+exibe arte gerada em código. As fotos do fundador entram como recortes com fundo transparente e tratamento escuro
+(`media.cut*`), sobre painéis com gráficos animados. A abertura usa duas imagens quadradas
+com o rosto no mesmo ponto: `media.hero` (base) e `media.heroReveal` (camada revelada pela
+máscara que segue o cursor).
 
 ### Formulário de contato
 

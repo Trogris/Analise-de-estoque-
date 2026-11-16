@@ -1,18 +1,15 @@
 "use client";
 
-import Image from "next/image";
 import { motion, useScroll, useTransform } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { founder, media, type MotifKind } from "@/config/site";
+import { founder, gallery, media } from "@/config/site";
 import { CountUp } from "../ui/CountUp";
 import { Frame } from "../ui/Frame";
 import { Tilt } from "../ui/Tilt";
-import { Motif } from "../ui/Motif";
+import { Portrait } from "../ui/Portrait";
 
 const CALLOUTS = founder.callouts;
-// Arte gerada para as molduras sem foto.
-const PLATES: MotifKind[] = ["rings", "takt", "grid", "steps", "untangle", "network"];
 
 // Posição vertical de cada moldura na faixa: cria o ritmo irregular da galeria.
 const OFFSETS = ["lg:self-start lg:mt-[4vh]", "lg:self-end lg:mb-[2vh]", "lg:self-center", "lg:self-start lg:mt-[10vh]", "lg:self-end lg:mb-[7vh]", "lg:self-start lg:mt-[6vh]"];
@@ -88,62 +85,48 @@ export function About() {
               <p className="t-body max-w-md opacity-75">{founder.bio}</p>
             </div>
 
-            {founder.disciplines.map((label, i) => {
-              const photo = media.gallery[i] ?? null;
-              return (
-                <div key={label} className="contents">
-                  <figure className={`w-[70vw] shrink-0 snap-start scroll-ml-5 ${SIZES[i]} ${OFFSETS[i]}`}>
-                    <Tilt max={7}>
+            {gallery.map((g, i) => (
+              <div key={g.label} className="contents">
+                <figure className={`w-[70vw] shrink-0 snap-start scroll-ml-5 ${SIZES[i % SIZES.length]} ${OFFSETS[i % OFFSETS.length]}`}>
+                  <Tilt max={7}>
                     <Frame
                       tab={
                         <figcaption className="flex gap-3">
                           <span className="opacity-55">{String(i + 1).padStart(2, "0")}</span>
-                          <span>{label}</span>
+                          <span>{g.label}</span>
                         </figcaption>
                       }
                     >
-                      <div className="grain relative m-[1px] aspect-[4/5] overflow-hidden bg-coal">
-                        {photo ? (
-                          <Image src={photo.src} alt={photo.alt} fill sizes="(min-width:1024px) 24rem, 70vw" className="photo object-cover" />
-                        ) : (
-                          <div className="grid h-full place-items-center p-8 text-fog">
-                            <Motif kind={PLATES[i % PLATES.length]} className="h-full w-full" />
-                          </div>
-                        )}
-                      </div>
+                      <Portrait photo={g.photo} motif={g.motif} className="grain m-[1px] aspect-[4/5]" />
                     </Frame>
-                    </Tilt>
-                  </figure>
-                  {i % 2 === 0 && CALLOUTS[i / 2] ? (
-                    <p className="t-serif w-[76vw] shrink-0 snap-start scroll-ml-5 self-center text-[2.1rem] lg:w-[30rem] lg:text-[3.6rem]">
-                      {CALLOUTS[i / 2]}
-                    </p>
-                  ) : null}
-                </div>
-              );
-            })}
+                  </Tilt>
+                </figure>
+                {i % 2 === 0 && CALLOUTS[i / 2] ? (
+                  <p className="t-serif w-[76vw] shrink-0 snap-start scroll-ml-5 self-center text-[2.1rem] lg:w-[30rem] lg:text-[3.6rem]">
+                    {CALLOUTS[i / 2]}
+                  </p>
+                ) : null}
+              </div>
+            ))}
 
-            {/* Fundador: painel claro, na cor do fundo da foto, para o retrato se fundir ao cartão */}
-            <article
-              className="relative flex w-[88vw] shrink-0 snap-start scroll-ml-5 flex-col overflow-hidden rounded-[0.5rem] text-ink shadow-[0_2rem_5rem_-2rem_rgba(0,0,0,0.35)] lg:h-full lg:w-[70rem] lg:flex-row"
-              style={{ background: media.founderBackdrop }}
-            >
-              <div className="flex flex-col justify-between gap-10 p-6 lg:w-[50%] lg:p-10">
-                <p className="t-eyebrow flex flex-wrap justify-between gap-2">
+            {/* Fundador: painel escuro, com a figura iluminada pela lateral */}
+            <article className="group relative flex w-[88vw] shrink-0 snap-start scroll-ml-5 flex-col overflow-hidden rounded-[0.5rem] bg-ink text-bone shadow-[0_2rem_5rem_-2rem_rgba(0,0,0,0.55)] lg:h-full lg:w-[70rem] lg:flex-row">
+              <div className="relative z-10 flex flex-col justify-between gap-10 p-6 lg:w-[52%] lg:p-10">
+                <p className="t-eyebrow flex flex-wrap justify-between gap-2 text-ash">
                   <span>{founder.role}</span>
-                  <span>{founder.stage}</span>
+                  <span className="text-accent">{founder.stage}</span>
                 </p>
                 <div className="flex flex-col gap-5">
                   <h3 className="t-title text-[2.6rem] lg:text-[4.2rem]">{founder.name}</h3>
-                  <p className="t-serif text-[1.35rem] leading-[1.15] lg:text-[1.6rem]">{founder.story}</p>
+                  <p className="t-serif text-[1.35rem] leading-[1.15] text-fog lg:text-[1.6rem]">{founder.story}</p>
                   <ul className="flex flex-wrap gap-2">
                     {founder.methods.map((d) => (
-                      <li key={d} className="t-eyebrow rounded-[0.2rem] border border-ink/40 px-2.5 py-2">
+                      <li key={d} className="t-eyebrow rounded-[0.2rem] border border-steel px-2.5 py-2 text-fog">
                         {d}
                       </li>
                     ))}
                   </ul>
-                  <a href="#contato" className="btn btn-dark mt-2 self-start">
+                  <a href="#contato" className="btn mt-2 self-start">
                     <span className="roll">
                       <span>Conversar com o fundador</span>
                       <span aria-hidden>Conversar com o fundador</span>
@@ -152,21 +135,13 @@ export function About() {
                   </a>
                 </div>
               </div>
-              <div className="relative aspect-[12/11] lg:aspect-auto lg:flex-1">
-                {media.founder ? (
-                  <Image
-                    src={media.founder.src}
-                    alt={media.founder.alt}
-                    fill
-                    sizes="(min-width:1024px) 36rem, 88vw"
-                    className="object-cover object-bottom [mask-image:linear-gradient(to_right,transparent,black_18%,black_82%,transparent),linear-gradient(to_bottom,transparent,black_14%)] [mask-composite:intersect]"
-                  />
-                ) : (
-                  <div className="grid h-full place-items-center p-10 text-ink/60">
-                    <Motif kind="rings" live className="h-full max-h-80 w-full" />
-                  </div>
-                )}
-              </div>
+              <Portrait
+                photo={media.cutFront}
+                motif="rings"
+                live
+                sizes="(min-width:1024px) 36rem, 88vw"
+                className="aspect-[12/11] !bg-transparent lg:aspect-auto lg:flex-1"
+              />
             </article>
           </motion.div>
         </div>

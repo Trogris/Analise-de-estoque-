@@ -20,7 +20,9 @@ export function Insights() {
   const mid = (insightTopics.length - 1) / 2;
 
   return (
-    <section id="insights" aria-labelledby="insights-title" className="relative overflow-hidden bg-bone pb-24 pt-20 text-ink lg:pb-36 lg:pt-28">
+    <section id="insights" aria-labelledby="insights-title" className="relative bg-ink text-ink">
+      <div className="arc bg-bone" aria-hidden />
+      <div className="relative overflow-hidden bg-bone pb-24 pt-14 lg:pb-36 lg:pt-20">
       <div className="contours" aria-hidden />
       <div className="gutter relative flex flex-col items-center text-center">
         <p className="t-eyebrow mb-6">Insights</p>
@@ -75,6 +77,7 @@ export function Insights() {
           ))}
         </ul>
       ) : null}
+      </div>
     </section>
   );
 }

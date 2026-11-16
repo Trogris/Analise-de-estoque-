@@ -7,6 +7,7 @@
  */
 
 export type MediaSlot = { src: string; alt: string } | null;
+export type MotifKind = "rings" | "takt" | "steps" | "grid" | "untangle" | "network";
 
 export const brand = {
   /** PROVISÓRIO: nome proposto. Verificar disponibilidade no INPI e de domínio antes de registrar. */
@@ -41,31 +42,31 @@ export const contact = {
  * Enquanto um espaço estiver `null`, o site exibe uma arte gerada em código.
  */
 export const media = {
-  /** Retrato da abertura (quadrado, rosto centralizado, fundo claro). */
-  hero: { src: "/media/hero-portrait.jpg", alt: "Retrato do fundador" } as MediaSlot,
-  /** Segunda camada do retrato, revelada pela máscara que segue o cursor. Mesmo enquadramento da foto acima. */
-  heroReveal: "/media/hero-portrait-casual.jpg",
-  /** Cor de fundo da abertura: igual ao fundo do retrato, para a foto se fundir à página. */
-  heroBackdrop: "#e8e6df",
-  /** Recorte (PNG com transparência) usado na seção "Ontem / Hoje" e no rodapé. */
-  cutoutSide: { src: "/media/founder-tablet-cutout.png", alt: "Fundador com um tablet nas mãos" } as MediaSlot,
-  cutoutFront: { src: "/media/founder-desk-cutout.png", alt: "Fundador apoiado sobre a mesa" } as MediaSlot,
-  /** Quatro fotos da grade do menu. */
-  menu: ["/media/founder-tablet.jpg", "/media/founder-portrait.jpg", "/media/founder-casual.jpg", "/media/founder-desk.jpg"],
-  /** Retrato principal do fundador. */
-  founder: { src: "/media/founder-desk.jpg", alt: "Fundador da consultoria apoiado sobre a mesa de trabalho" } as MediaSlot,
-  /** Cor de fundo da foto do fundador: o painel usa a mesma cor para o retrato se fundir a ele. */
-  founderBackdrop: "#dcdce1",
-  /** Fotos da galeria horizontal, na ordem das áreas de experiência do fundador. `null` = arte gerada. */
-  gallery: [
-    { src: "/media/founder-tablet.jpg", alt: "Fundador analisando informações em um tablet" },
-    null,
-    { src: "/media/founder-portrait.jpg", alt: "Retrato do fundador" },
-    { src: "/media/founder-casual.jpg", alt: "Fundador de braços cruzados, sorrindo" },
-    { src: "/media/founder-desk.jpg", alt: "Fundador apoiado sobre a mesa de trabalho" },
-    null,
-  ] as MediaSlot[],
+  /**
+   * ABERTURA: duas imagens quadradas com o rosto no mesmo ponto.
+   * `hero` é o recorte de blazer (PNG/WebP com transparência) sobre o fundo escuro do site;
+   * `heroReveal` é a camada de camiseta, revelada pela máscara que segue o cursor.
+   */
+  hero: { src: "/media/hero-blazer.webp", alt: "Retrato do fundador, de blazer" } as MediaSlot,
+  heroReveal: "/media/hero-reveal.jpg",
+  /** Recortes da pessoa (fundo transparente, tratamento escuro). */
+  cutFront: { src: "/media/cut-blazer-front.webp", alt: "Fundador de blazer, de frente" } as MediaSlot,
+  cutTablet: { src: "/media/cut-blazer-tablet.webp", alt: "Fundador de blazer, consultando um tablet" } as MediaSlot,
+  cutCasual: { src: "/media/cut-casual.webp", alt: "Fundador de camiseta, de braços cruzados" } as MediaSlot,
 };
+
+/**
+ * Galeria do Sobre: uma moldura por área de experiência.
+ * Cada moldura tem um gráfico animado; `photo` acrescenta um recorte na frente dele.
+ */
+export const gallery: { label: string; motif: MotifKind; photo: MediaSlot }[] = [
+  { label: "Operações", motif: "rings", photo: media.cutTablet },
+  { label: "Produção", motif: "takt", photo: null },
+  { label: "Manutenção", motif: "steps", photo: media.cutFront },
+  { label: "Estoques e logística", motif: "grid", photo: null },
+  { label: "Qualidade", motif: "untangle", photo: null },
+  { label: "Melhoria contínua", motif: "network", photo: media.cutCasual },
+];
 
 export const nav = [
   { id: "solucoes", label: "Soluções", hint: "Três serviços" },
@@ -90,9 +91,9 @@ export const manifesto =
   "*Inteligência artificial* só tem valor quando vira *hora economizada,* retrabalho *eliminado* e processo mais *simples.* Por isso começamos pelo *processo.* A ferramenta vem depois.";
 
 /** Seção dividida: de onde vem a experiência e onde ela é aplicada agora. */
-export const split = [
-  { over: "Ontem", title: "Indústria", text: "Duas décadas em operações, produção, manutenção, estoques, logística e qualidade.", href: "#sobre" },
-  { over: "Hoje", title: "IA aplicada", text: "A mesma disciplina de processo, usada para automatizar tarefas e simplificar rotinas.", href: "#solucoes" },
+export const split: { over: string; title: string; text: string; href: string; photo: "cutFront" | "cutCasual" | "cutTablet"; motif: MotifKind }[] = [
+  { over: "Ontem", title: "Indústria", text: "Duas décadas em operações, produção, manutenção, estoques, logística e qualidade.", href: "#sobre", photo: "cutFront", motif: "rings" },
+  { over: "Hoje", title: "IA aplicada", text: "A mesma disciplina de processo, usada para automatizar tarefas e simplificar rotinas.", href: "#solucoes", photo: "cutCasual", motif: "network" },
 ];
 
 /** Tecnologias e entregas citadas no letreiro das soluções. */
@@ -111,8 +112,6 @@ export const frictions = [
 ];
 
 export const audience = ["Pequenas e médias indústrias", "Distribuidoras", "Empresas de serviços"];
-
-export type MotifKind = "rings" | "takt" | "steps" | "grid" | "untangle" | "network";
 
 export const solutions: { title: string; lead: string; items: string[]; motif: MotifKind; tag: string }[] = [
   {
@@ -188,8 +187,6 @@ export const founder = {
     "Depois de duas décadas reduzindo custos e aumentando a produtividade de operações industriais, inicia agora uma atuação independente: aplicar inteligência artificial aos problemas de processo que conhece na prática.",
   /** Aviso de transparência exibido no painel do fundador. */
   stage: "Consultoria em início de atuação",
-  /** Áreas de experiência: legendas das molduras da galeria. */
-  disciplines: ["Operações", "Produção", "Manutenção", "Estoques e logística", "Qualidade", "Melhoria contínua"],
   methods: ["Lean Manufacturing", "Six Sigma", "Gestão de processos", "Indicadores", "Redução de custos"],
   callouts: [
     "Vinte anos resolvendo problemas de operação por dentro da indústria.",

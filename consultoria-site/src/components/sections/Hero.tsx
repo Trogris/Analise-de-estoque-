@@ -25,12 +25,12 @@ export function Hero() {
   const reduce = useReducedMotion();
   const { scrollYProgress: p } = useScroll({ target: ref, offset: ["start start", "end end"] });
 
-  const bg = useTransform(p, [0.06, 0.36], [media.heroBackdrop, "#1c1d1e"]);
+  const bg = useTransform(p, [0.06, 0.36], ["#0a0a0b", "#1c1d1e"]);
+  const plate = useTransform(p, [0.05, 0.3], [0, 1]);
   const scale = useTransform(p, [0.05, 0.42], [1, 0.46]);
   const clip = useTransform(p, [0.05, 0.42], ["inset(0% 0% 0% 0%)", "inset(9% 3% 31% 3%)"]);
   const lift = useTransform(p, [0.05, 0.42], ["0%", "11%"]);
-  const vignette = useTransform(p, [0.05, 0.3], [1, 0]);
-  const introOpacity = useTransform(p, [0, 0.14], [1, 0]);
+    const introOpacity = useTransform(p, [0, 0.14], [1, 0]);
   const introY = useTransform(p, [0, 0.14], [0, -60]);
   const revealOpacity = useTransform(p, [0.08, 0.26], [1, 0]);
   const bandOpacity = useTransform(p, [0.26, 0.38, 0.5, 0.6], [0, 1, 1, 0]);
@@ -38,8 +38,7 @@ export function Hero() {
   const bandA = useTransform(p, [0.2, 1], ["4%", "-38%"]);
   const bandB = useTransform(p, [0.2, 1], ["-40%", "0%"]);
   const gray = useTransform(p, [0.42, 0.52], ["grayscale(0) brightness(1)", "grayscale(1) brightness(0.6)"]);
-  const contourColor = useTransform(p, [0.06, 0.36], ["#0a0a0b", "#f1efe8"]);
-  const delay = reduce ? 0 : INTRO;
+    const delay = reduce ? 0 : INTRO;
 
   const [a, b] = hero.headline;
   const split = (s: string) => {
@@ -53,7 +52,12 @@ export function Hero() {
   return (
     <section id="top" ref={ref} className="relative h-[290svh]" aria-label="Início">
       <motion.div style={{ backgroundColor: bg }} className="sticky top-0 h-svh overflow-hidden">
-        <motion.div style={{ color: contourColor }} className="contours" aria-hidden />
+        <div className="contours text-bone" aria-hidden />
+        {/* Brilho atrás do retrato e malha técnica, visíveis enquanto ele ocupa a tela */}
+        <motion.div style={{ opacity: introOpacity }} className="absolute inset-0" aria-hidden>
+          <div className="absolute left-1/2 top-[8%] aspect-square w-[150vw] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--color-accent)_24%,transparent),transparent)] lg:top-[-6%] lg:w-[62vw]" />
+          <div className="plate-grid" />
+        </motion.div>
 
         {/* Letreiros por trás do retrato */}
         <motion.div style={{ opacity: bandOpacity }} className="absolute inset-x-0 top-1/2 -translate-y-1/2 select-none" aria-hidden>
@@ -78,24 +82,24 @@ export function Hero() {
           style={{ scale, clipPath: clip, y: lift, opacity: boxOpacity }}
           className="absolute left-1/2 top-14 aspect-square w-[118vw] -translate-x-1/2 will-change-transform lg:bottom-0 lg:top-auto lg:h-full lg:w-auto"
         >
+          {/* Fundo próprio da moldura: aparece quando o retrato encolhe */}
+          <motion.div style={{ opacity: plate }} className="plate absolute inset-0" aria-hidden>
+            <div className="plate-grid" />
+            <div className="plate-glow" />
+          </motion.div>
           <motion.div style={{ filter: gray }} className="absolute inset-0">
             {media.hero ? (
               <Image src={media.hero.src} alt={media.hero.alt} fill priority sizes="(min-width:1024px) 100vh, 118vw" className="object-cover" />
             ) : null}
             <motion.div style={{ opacity: revealOpacity }} className="absolute inset-0">
               <BlobReveal src={media.heroReveal} />
+              <div className="plate-scan is-live" aria-hidden />
             </motion.div>
           </motion.div>
-          {/* Funde as bordas da foto ao fundo enquanto ela ocupa a tela */}
-          <motion.div
-            style={{ opacity: vignette, boxShadow: `inset 0 0 7vw 5vw ${media.heroBackdrop}` }}
-            className="absolute inset-0"
-            aria-hidden
-          />
         </motion.div>
 
         {/* Faixa escura inferior + título */}
-        <motion.div style={{ opacity: introOpacity }} className="pointer-events-none absolute inset-x-0 bottom-0 h-[60%] bg-gradient-to-t from-ink from-45% via-ink/75 to-transparent lg:h-[44%] lg:from-40%" aria-hidden />
+        <motion.div style={{ opacity: introOpacity }} className="pointer-events-none absolute inset-x-0 bottom-0 h-[62%] bg-gradient-to-t from-ink from-45% via-ink/80 to-transparent lg:h-[48%] lg:from-38%" aria-hidden />
         <motion.div
           style={{ opacity: introOpacity, y: introY }}
           className="gutter absolute inset-x-0 bottom-0 flex flex-col gap-5 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] text-bone lg:gap-8 lg:pb-8"
@@ -153,7 +157,7 @@ function Pillars({ className = "" }: { className?: string }) {
 /** Versão sem animação de rolagem, para quem prefere movimento reduzido. */
 function HeroStatic() {
   return (
-    <section id="top" className="relative overflow-hidden" style={{ backgroundColor: media.heroBackdrop }} aria-label="Início">
+    <section id="top" className="relative overflow-hidden bg-ink" aria-label="Início">
       <div className="relative mx-auto aspect-square w-[138vw] max-w-none -translate-x-[14%] lg:h-[80svh] lg:w-auto lg:translate-x-0">
         {media.hero ? <Image src={media.hero.src} alt={media.hero.alt} fill priority sizes="100vw" className="object-cover" /> : null}
       </div>
