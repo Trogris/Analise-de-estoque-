@@ -1,0 +1,546 @@
+@import "tailwindcss";
+@import "@fontsource-variable/archivo/wdth.css";
+@import "@fontsource/instrument-serif/400.css";
+@import "@fontsource/instrument-serif/400-italic.css";
+@import "@fontsource-variable/jetbrains-mono/wght.css";
+
+/* ------------------------------------------------------------------
+   Sistema visual
+   Conceito: sala de controle industrial. Preto de fundição, osso,
+   grafite e um único verde-limão. Tipografia de largura
+   variável: condensada no celular, plena no desktop.
+   ------------------------------------------------------------------ */
+@theme {
+  --color-ink: #0a0a0b;
+  --color-coal: #121213;
+  --color-graphite: #1c1d1e;
+  --color-steel: #38393b;
+  --color-ash: #9d9b94;
+  --color-fog: #c9c7bf;
+  --color-bone: #f1efe8;
+  --color-accent: #c8f230;
+
+  --font-display: "Archivo Variable", "Arial Narrow", Arial, sans-serif;
+  --font-serif: "Instrument Serif", "Times New Roman", serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, Menlo, monospace;
+
+  --ease-brand: cubic-bezier(0.65, 0.05, 0, 1);
+}
+
+:root {
+  color-scheme: dark;
+  --gutter: 1.25rem;
+  --dur: 0.75s;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+/* Escala fluida: o layout inteiro acompanha a largura da tela no desktop. */
+@media (min-width: 992px) {
+  html {
+    font-size: clamp(13px, calc(100vw / 1728 * 16), 19px);
+  }
+}
+
+body {
+  background: var(--color-ink);
+  color: var(--color-bone);
+  font-family: var(--font-display);
+  font-stretch: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.gutter {
+  padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
+}
+
+/* ---------- Tipografia ---------- */
+.t-impact {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-stretch: 72%;
+  text-transform: uppercase;
+  line-height: 0.86;
+  letter-spacing: -0.02em;
+}
+@media (min-width: 992px) {
+  .t-impact {
+    font-stretch: 100%;
+    letter-spacing: -0.035em;
+  }
+}
+.t-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-stretch: 88%;
+  text-transform: uppercase;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+}
+.t-serif {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.02;
+}
+.t-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+}
+.t-body {
+  font-size: 1.0625rem;
+  line-height: 1.45;
+  letter-spacing: -0.005em;
+}
+.t-outline {
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1.5px currentColor;
+}
+
+/* ---------- Moldura com recorte (assinatura do layout) ---------- */
+.frame {
+  --notch: 2.75rem;
+  --tab: 46%;
+  --line: var(--frame-line, var(--color-steel));
+  --fill: var(--frame-fill, var(--color-ink));
+  position: relative;
+}
+.frame-shape,
+.frame-shape::after {
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - var(--notch)),
+    calc(100% - var(--tab)) calc(100% - var(--notch)),
+    calc(100% - var(--tab) - var(--notch) * 0.75) 100%,
+    0 100%
+  );
+}
+.frame-shape {
+  position: absolute;
+  inset: 0;
+  background: var(--line);
+  transition: background-color var(--dur) var(--ease-brand);
+}
+.frame-shape::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  background: var(--fill);
+}
+.frame-body {
+  position: relative;
+  height: 100%;
+  padding-bottom: var(--notch);
+}
+.frame-tab {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  height: var(--notch);
+  width: var(--tab);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+.frame:hover,
+.frame:focus-within {
+  --line: var(--color-accent);
+}
+
+/* ---------- Inclinação 3D + foco de luz que segue o cursor ---------- */
+.tilt {
+  --mx: 50%;
+  --my: 50%;
+  position: relative;
+  transform: perspective(1100px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.7s var(--ease-brand);
+  will-change: transform;
+}
+.tilt.is-active {
+  transition: transform 0.12s linear;
+}
+.tilt::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s;
+  background: radial-gradient(22rem circle at var(--mx) var(--my), color-mix(in srgb, var(--color-accent) 16%, transparent), transparent 62%);
+  mix-blend-mode: screen;
+}
+.tilt.is-active::after {
+  opacity: 1;
+}
+
+/* ---------- Cursor de marca ---------- */
+.cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 90;
+  width: 2.4rem;
+  height: 2.4rem;
+  margin: -1.2rem 0 0 -1.2rem;
+  border-radius: 999px;
+  border: 1.5px solid #fff;
+  mix-blend-mode: difference;
+  pointer-events: none;
+}
+
+/* ---------- Marca-texto sobre fundo claro ---------- */
+.mark {
+  background: linear-gradient(var(--color-accent), var(--color-accent)) no-repeat 0 88% / 100% 0.34em;
+  padding: 0 0.06em;
+}
+
+/* ---------- Curvas de nível ao fundo ---------- */
+.contours {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: currentColor;
+  opacity: 0.09;
+  -webkit-mask: url("/media/contours.svg") center / cover no-repeat;
+  mask: url("/media/contours.svg") center / cover no-repeat;
+}
+
+/* Rolagem suave (Lenis) assume o controle no lugar do comportamento nativo */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+html.lenis {
+  scroll-behavior: auto;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* ---------- Arco entre seções ---------- */
+.arc {
+  height: clamp(2.5rem, 7vw, 7rem);
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  margin-top: calc(clamp(2.5rem, 7vw, 7rem) * -1);
+  position: relative;
+  z-index: 2;
+}
+
+/* ---------- Grão cinematográfico ---------- */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.16;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- Foto: tratamento de cor ---------- */
+.photo {
+  filter: grayscale(1) contrast(1.08);
+  transition:
+    filter var(--dur) var(--ease-brand),
+    transform 1.2s var(--ease-brand);
+}
+.group:hover .photo,
+.group:focus-within .photo {
+  filter: grayscale(0) contrast(1.02);
+  transform: scale(1.04);
+}
+
+/* ---------- Botão ---------- */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 3.25rem;
+  padding: 0 1.1rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-ink);
+  font-weight: 800;
+  font-stretch: 88%;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  overflow: hidden;
+  isolation: isolate;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--color-bone);
+  transform: translateY(101%);
+  transition: transform 0.55s var(--ease-brand);
+}
+.btn:hover::before,
+.btn:focus-visible::before {
+  transform: translateY(0);
+}
+.btn-ghost {
+  background: transparent;
+  color: inherit;
+  border-color: currentColor;
+}
+.btn-ghost:hover,
+.btn-ghost:focus-visible {
+  color: var(--color-ink);
+  border-color: var(--color-bone);
+}
+.btn-dark {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-bone);
+}
+.btn-dark:hover,
+.btn-dark:focus-visible {
+  color: var(--color-ink);
+}
+/* Texto que rola dentro do botão ao passar o mouse */
+.roll {
+  display: inline-block;
+  overflow: hidden;
+  height: 1.4em;
+  line-height: 1.4;
+}
+.roll > span {
+  display: block;
+  transition: transform 0.55s var(--ease-brand);
+}
+.btn:hover .roll > span,
+.btn:focus-visible .roll > span,
+.roll-host:hover .roll > span {
+  transform: translateY(-100%);
+}
+
+/* ---------- Carregador de abertura ---------- */
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--color-accent);
+  color: var(--color-ink);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 1.5rem max(var(--gutter), env(safe-area-inset-right, 0px)) calc(1.5rem + env(safe-area-inset-bottom, 0px))
+    max(var(--gutter), env(safe-area-inset-left, 0px));
+  animation: loader-out 0.9s var(--ease-brand) 1.15s forwards;
+}
+.loader-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 4px;
+  width: 100%;
+  background: var(--color-ink);
+  transform-origin: left;
+  animation: loader-bar 1.1s var(--ease-brand) forwards;
+}
+@keyframes loader-bar {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes loader-out {
+  to { transform: translateY(-101%); visibility: hidden; }
+}
+
+/* ---------- Letreiro ---------- */
+.marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 38s linear infinite;
+}
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+
+/* ---------- Motivos animados (expertise) ---------- */
+.motif * {
+  vector-effect: non-scaling-stroke;
+}
+.motif .spin { transform-origin: 100px 100px; animation: spin 28s linear infinite; }
+.motif .spin-r { transform-origin: 100px 100px; animation: spin 40s linear infinite reverse; }
+.motif .pulse { animation: pulse 2.6s ease-in-out infinite; }
+.motif .dash { stroke-dasharray: 6 8; animation: dash 3s linear infinite; }
+.motif .draw { stroke-dasharray: 600; stroke-dashoffset: 600; animation: draw 5s var(--ease-brand) infinite alternate; }
+.motif .rise { transform-box: fill-box; transform-origin: bottom; animation: rise 2.4s var(--ease-brand) infinite alternate; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+@keyframes dash { to { stroke-dashoffset: -28; } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes rise { from { transform: scaleY(0.35); } to { transform: scaleY(1); } }
+.motif-idle * { animation-play-state: paused; }
+.group:hover .motif-idle *,
+.group:focus-within .motif-idle *,
+.motif-live * { animation-play-state: running; }
+
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ---------- Movimento reduzido ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .loader { display: none; }
+  .marquee { animation: none; }
+  .motif * { animation: none !important; }
+  .motif .draw { stroke-dashoffset: 0; }
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- Linha editorial (Insights) ---------- */
+.row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.6rem 0;
+  border-bottom: 1px solid var(--color-steel);
+  isolation: isolate;
+  transition:
+    color 0.5s var(--ease-brand),
+    padding 0.6s var(--ease-brand);
+}
+.row::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--color-accent);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.6s var(--ease-brand);
+}
+@media (hover: hover) {
+  .row:hover {
+    color: var(--color-ink);
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+  .row:hover::before {
+    transform: scaleY(1);
+  }
+}
+a.row:focus-visible {
+  color: var(--color-ink);
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+a.row:focus-visible::before {
+  transform: scaleY(1);
+}
+
+/* ---------- Campos do formulário ---------- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.field input,
+.field textarea {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--color-ink) 45%, transparent);
+  padding: 0.5rem 0 0.8rem;
+  font: inherit;
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+  border-radius: 0;
+  transition: border-color 0.3s;
+}
+.field textarea {
+  resize: vertical;
+  min-height: 7.5rem;
+}
+.field input::placeholder,
+.field textarea::placeholder {
+  color: color-mix(in srgb, var(--color-ink) 42%, transparent);
+  font-weight: 500;
+}
+.field input:focus-visible,
+.field textarea:focus-visible {
+  outline: none;
+  border-bottom-color: var(--color-ink);
+  box-shadow: 0 1.5px 0 var(--color-ink);
+}
+.field [aria-invalid="true"] {
+  border-bottom-style: dashed;
+  border-bottom-color: var(--color-ink);
+}
+
+/* ---------- Controle deslizante (simulador) ---------- */
+.range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 1.75rem;
+  background: transparent;
+  cursor: pointer;
+}
+.range::-webkit-slider-runnable-track {
+  height: 3px;
+  background: linear-gradient(to right, var(--color-accent) var(--p), var(--color-steel) var(--p));
+}
+.range::-moz-range-track {
+  height: 3px;
+  background: linear-gradient(to right, var(--color-accent) var(--p), var(--color-steel) var(--p));
+}
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: calc(-0.575rem + 1.5px);
+  background: var(--color-bone);
+  border: 0;
+  border-radius: 0.15rem;
+  transform: rotate(45deg);
+  transition: background-color 0.3s, transform 0.3s var(--ease-brand);
+}
+.range::-moz-range-thumb {
+  width: 1.15rem;
+  height: 1.15rem;
+  background: var(--color-bone);
+  border: 0;
+  border-radius: 0.15rem;
+  transform: rotate(45deg);
+}
+.range:hover::-webkit-slider-thumb,
+.range:focus-visible::-webkit-slider-thumb {
+  background: var(--color-accent);
+  transform: rotate(45deg) scale(1.2);
+}
