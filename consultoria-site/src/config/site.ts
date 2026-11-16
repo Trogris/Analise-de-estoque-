@@ -41,8 +41,17 @@ export const contact = {
  * Enquanto um espaço estiver `null`, o site exibe uma arte gerada em código.
  */
 export const media = {
-  /** Foto de ambiente industrial para a abertura (paisagem, 2400px ou mais). */
-  hero: null as MediaSlot,
+  /** Retrato da abertura (quadrado, rosto centralizado, fundo claro). */
+  hero: { src: "/media/hero-portrait.jpg", alt: "Retrato do fundador" } as MediaSlot,
+  /** Segunda camada do retrato, revelada pela máscara que segue o cursor. Mesmo enquadramento da foto acima. */
+  heroReveal: "/media/hero-portrait-casual.jpg",
+  /** Cor de fundo da abertura: igual ao fundo do retrato, para a foto se fundir à página. */
+  heroBackdrop: "#e8e6df",
+  /** Recorte (PNG com transparência) usado na seção "Ontem / Hoje" e no rodapé. */
+  cutoutSide: { src: "/media/founder-tablet-cutout.png", alt: "Fundador com um tablet nas mãos" } as MediaSlot,
+  cutoutFront: { src: "/media/founder-desk-cutout.png", alt: "Fundador apoiado sobre a mesa" } as MediaSlot,
+  /** Quatro fotos da grade do menu. */
+  menu: ["/media/founder-tablet.jpg", "/media/founder-portrait.jpg", "/media/founder-casual.jpg", "/media/founder-desk.jpg"],
   /** Retrato principal do fundador. */
   founder: { src: "/media/founder-desk.jpg", alt: "Fundador da consultoria apoiado sobre a mesa de trabalho" } as MediaSlot,
   /** Cor de fundo da foto do fundador: o painel usa a mesma cor para o retrato se fundir a ele. */
@@ -53,7 +62,7 @@ export const media = {
     null,
     { src: "/media/founder-portrait.jpg", alt: "Retrato do fundador" },
     { src: "/media/founder-casual.jpg", alt: "Fundador de braços cruzados, sorrindo" },
-    { src: "/media/founder-tablet-cutout.png", alt: "Fundador em pé, com um tablet nas mãos" },
+    { src: "/media/founder-desk.jpg", alt: "Fundador apoiado sobre a mesa de trabalho" },
     null,
   ] as MediaSlot[],
 };
@@ -71,12 +80,23 @@ export const hero = {
   sub: "Aplicamos inteligência artificial para simplificar processos, automatizar tarefas e melhorar a produtividade das empresas.",
   cta: "Conhecer as soluções",
   pillars: ["Diagnosticar", "Implementar", "Medir"],
-  labels: { from: "Processo como está", to: "Processo com IA" },
+  /** Letreiros que passam por trás do retrato quando ele encolhe. */
+  marquees: ["Mais produtividade", "Menos complexidade", "IA aplicada", "Produtividade real"],
 };
 
 /** Texto revelado palavra a palavra na rolagem. */
+/** Trechos entre asteriscos aparecem em serifa verde-limão. */
 export const manifesto =
-  "Inteligência artificial só tem valor quando vira hora economizada, retrabalho eliminado e processo mais simples. Por isso começamos pelo processo. A ferramenta vem depois.";
+  "*Inteligência artificial* só tem valor quando vira *hora economizada,* retrabalho *eliminado* e processo mais *simples.* Por isso começamos pelo *processo.* A ferramenta vem depois.";
+
+/** Seção dividida: de onde vem a experiência e onde ela é aplicada agora. */
+export const split = [
+  { over: "Ontem", title: "Indústria", text: "Duas décadas em operações, produção, manutenção, estoques, logística e qualidade.", href: "#sobre" },
+  { over: "Hoje", title: "IA aplicada", text: "A mesma disciplina de processo, usada para automatizar tarefas e simplificar rotinas.", href: "#solucoes" },
+];
+
+/** Tecnologias e entregas citadas no letreiro das soluções. */
+export const stack = ["ChatGPT", "Claude", "n8n", "Assistentes inteligentes", "Automações", "Análise de documentos", "Relatórios", "Integrações"];
 
 /** Letreiro: o que costuma travar a produtividade. */
 export const frictions = [

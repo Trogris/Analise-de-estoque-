@@ -7,7 +7,7 @@ import { CopyEmail } from "./CopyEmail";
 
 export function Contact() {
   return (
-    <section id="contato" aria-labelledby="contact-title" className="relative bg-ink">
+    <section id="contato" aria-labelledby="contact-title" className="relative bg-bone">
       <div className="arc bg-accent" aria-hidden />
       <div className="bg-accent pb-24 text-ink lg:pb-36">
         <div className="gutter">

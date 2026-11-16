@@ -1,48 +1,36 @@
 "use client";
 
-import { motion, useReducedMotion, useScroll, useSpring, useTransform, useVelocity, type MotionValue } from "motion/react";
+import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react";
 import { useRef } from "react";
-import { brand, frictions, manifesto } from "@/config/site";
+import { brand, manifesto } from "@/config/site";
 
-/** Letreiro com a proposta de valor + manifesto revelado palavra a palavra conforme a rolagem. */
+/** Manifesto centralizado, revelado palavra a palavra; os trechos marcados alternam para serifa verde-limão. */
 export function Statement() {
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start 0.85", "end 0.55"] });
-  const words = manifesto.split(" ");
-  // O letreiro acelera e inclina com a velocidade da rolagem.
-  const { scrollY } = useScroll();
-  const velocity = useSpring(useVelocity(scrollY), { stiffness: 60, damping: 22 });
-  const skew = useTransform(velocity, [-2500, 2500], [9, -9], { clamp: true });
-  const drift = useTransform(velocity, [-2500, 2500], [70, -70], { clamp: true });
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start 0.9", "end 0.6"] });
+
+  // "*trecho*" -> palavras com destaque
+  const words = manifesto.split("*").flatMap((chunk, i) =>
+    chunk
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((w) => ({ w, em: i % 2 === 1 })),
+  );
+  const plain = manifesto.replaceAll("*", "");
 
   return (
-    <section className="relative z-10 -mt-[20svh] rounded-t-[2rem] bg-graphite pb-28 pt-10 lg:rounded-t-[3.5rem] lg:pb-44" aria-label="Manifesto">
-      <div className="overflow-hidden border-b border-steel pb-10" aria-hidden>
-        <motion.div style={reduce ? undefined : { skewX: skew, x: drift }}>
-        <div className="marquee">
-          {[0, 1].map((k) => (
-            <div key={k} className="flex shrink-0 items-center">
-              {frictions.map((p) => (
-                <span key={p} className="flex items-center gap-8 pr-8 text-[1.6rem] font-bold uppercase tracking-[-0.02em] text-fog [font-stretch:85%] lg:text-[2.2rem]">
-                  {p}
-                  <span className="inline-block size-3 rotate-45 bg-accent" />
-                </span>
-              ))}
-            </div>
-          ))}
-        </div>
-        </motion.div>
-      </div>
-
-      <div ref={ref} className="gutter mx-auto max-w-[92rem] pt-24 lg:pt-40">
-        <p className="t-eyebrow mb-8 text-accent lg:mb-12">No que acreditamos</p>
-        <p className="text-[clamp(2rem,6.6vw,5.6rem)] font-medium uppercase leading-[0.92] tracking-[-0.035em] [font-stretch:76%] lg:[font-stretch:100%]">
-          <span className="sr-only">{manifesto}</span>
+    <section className="relative z-10 -mt-[80svh] bg-graphite pb-28 pt-[14svh] text-bone lg:pb-44" aria-label="Manifesto">
+      <div className="contours" aria-hidden />
+      <div ref={ref} className="gutter relative mx-auto flex max-w-[86rem] flex-col items-center text-center">
+        <p className="t-eyebrow mb-10 text-accent lg:mb-14">No que acreditamos</p>
+        <p className="text-[clamp(2rem,6.2vw,5.6rem)] font-semibold uppercase leading-[0.94] tracking-[-0.035em] [font-stretch:76%] lg:[font-stretch:100%]">
+          <span className="sr-only">{plain}</span>
           <span aria-hidden>
-            {words.map((w, i) => (
-              <Word key={i} progress={scrollYProgress} range={[i / words.length, (i + 1) / words.length]} still={!!reduce}>
-                {w}
+            {words.map((x, i) => (
+              <Word key={i} em={x.em} progress={scrollYProgress} range={[i / words.length, (i + 1) / words.length]} still={!!reduce}>
+                {x.w}
               </Word>
             ))}
           </span>
@@ -58,15 +46,20 @@ function Word({
   progress,
   range,
   still,
+  em,
 }: {
   children: string;
   progress: MotionValue<number>;
   range: [number, number];
   still: boolean;
+  em: boolean;
 }) {
-  const opacity = useTransform(progress, range, [0.14, 1]);
+  const opacity = useTransform(progress, range, [0.13, 1]);
   return (
-    <motion.span style={still ? undefined : { opacity }} className="mr-[0.24em] inline-block">
+    <motion.span
+      style={still ? undefined : { opacity }}
+      className={`mx-[0.12em] inline-block ${em ? "t-serif font-normal text-accent [font-size:1.06em] [letter-spacing:-0.02em]" : ""}`}
+    >
       {children}
     </motion.span>
   );

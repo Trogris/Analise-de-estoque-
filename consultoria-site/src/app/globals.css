@@ -121,8 +121,8 @@ body {
 .frame {
   --notch: 2.75rem;
   --tab: 46%;
-  --line: var(--color-steel);
-  --fill: var(--color-ink);
+  --line: var(--frame-line, var(--color-steel));
+  --fill: var(--frame-fill, var(--color-ink));
   position: relative;
 }
 .frame-shape,
@@ -214,6 +214,29 @@ body {
 .mark {
   background: linear-gradient(var(--color-accent), var(--color-accent)) no-repeat 0 88% / 100% 0.34em;
   padding: 0 0.06em;
+}
+
+/* ---------- Curvas de nível ao fundo ---------- */
+.contours {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: currentColor;
+  opacity: 0.09;
+  -webkit-mask: url("/media/contours.svg") center / cover no-repeat;
+  mask: url("/media/contours.svg") center / cover no-repeat;
+}
+
+/* Rolagem suave (Lenis) assume o controle no lugar do comportamento nativo */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+html.lenis {
+  scroll-behavior: auto;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
 }
 
 /* ---------- Arco entre seções ---------- */

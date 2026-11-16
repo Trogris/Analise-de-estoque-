@@ -50,16 +50,23 @@ export function About() {
   const { scrollYProgress } = useScroll({ target: section, offset: ["start start", "end end"] });
   const x = useTransform(scrollYProgress, [0, 1], [0, -dist]);
   const bar = useTransform(scrollYProgress, [0, 1], [0.04, 1]);
+  // Troca de tema guiada pela rolagem: grafite -> cinza -> osso.
+  const bg = useTransform(scrollYProgress, [0.12, 0.45, 0.78], ["#1c1d1e", "#8b8a83", "#f1efe8"]);
+  const fg = useTransform(scrollYProgress, [0.4, 0.5], ["#f1efe8", "#0a0a0b"]);
+  const theme = pinned
+    ? ({ backgroundColor: bg, color: fg, "--frame-fill": bg, "--frame-line": "color-mix(in srgb, currentColor 28%, transparent)" } as unknown as React.CSSProperties)
+    : ({ "--frame-fill": "var(--color-graphite)" } as React.CSSProperties);
 
   return (
     <section
       id="sobre"
       ref={section}
       aria-labelledby="sobre-title"
-      className="relative bg-graphite"
+      className="relative bg-graphite text-bone"
       style={pinned ? { height: `calc(100svh + ${dist}px)` } : undefined}
     >
-      <div className={pinned ? "sticky top-0 flex h-svh flex-col justify-center overflow-hidden" : "py-10"}>
+      <motion.div style={theme} className={pinned ? "sticky top-0 flex h-svh flex-col justify-center overflow-hidden" : "py-10"}>
+        <div className="contours" aria-hidden />
         <div className={pinned ? "" : "no-scrollbar snap-x snap-mandatory overflow-x-auto"}>
           <motion.div
             ref={track}
@@ -68,17 +75,17 @@ export function About() {
           >
             {/* Abertura */}
             <div className="flex w-[82vw] shrink-0 snap-start scroll-ml-5 flex-col gap-6 lg:w-[38rem] lg:self-end">
-              <p className="t-eyebrow text-accent">Sobre</p>
+              <p className="t-eyebrow opacity-70">Sobre</p>
               <h2 id="sobre-title" className="t-impact text-[5.2rem] lg:text-[11rem]">
                 <span className="flex items-start">
                   <CountUp to={founder.years} />
-                  <span className="text-accent">+</span>
+                  <span className="text-accent [text-shadow:0_0_1px_rgba(0,0,0,0.5)]">+</span>
                 </span>
-                <span className="t-serif block text-[0.34em] normal-case leading-[1] tracking-[-0.01em] text-fog">
+                <span className="t-serif block text-[0.34em] normal-case leading-[1] tracking-[-0.01em] opacity-75">
                   anos de indústria
                 </span>
               </h2>
-              <p className="t-body max-w-md text-fog">{founder.bio}</p>
+              <p className="t-body max-w-md opacity-75">{founder.bio}</p>
             </div>
 
             {founder.disciplines.map((label, i) => {
@@ -88,12 +95,10 @@ export function About() {
                   <figure className={`w-[70vw] shrink-0 snap-start scroll-ml-5 ${SIZES[i]} ${OFFSETS[i]}`}>
                     <Tilt max={7}>
                     <Frame
-                      className="text-fog"
-                      fill="var(--color-graphite)"
                       tab={
                         <figcaption className="flex gap-3">
-                          <span className="text-ash">{String(i + 1).padStart(2, "0")}</span>
-                          <span className="text-bone">{label}</span>
+                          <span className="opacity-55">{String(i + 1).padStart(2, "0")}</span>
+                          <span>{label}</span>
                         </figcaption>
                       }
                     >
@@ -101,7 +106,7 @@ export function About() {
                         {photo ? (
                           <Image src={photo.src} alt={photo.alt} fill sizes="(min-width:1024px) 24rem, 70vw" className="photo object-cover" />
                         ) : (
-                          <div className="grid h-full place-items-center p-8">
+                          <div className="grid h-full place-items-center p-8 text-fog">
                             <Motif kind={PLATES[i % PLATES.length]} className="h-full w-full" />
                           </div>
                         )}
@@ -110,7 +115,7 @@ export function About() {
                     </Tilt>
                   </figure>
                   {i % 2 === 0 && CALLOUTS[i / 2] ? (
-                    <p className="t-serif w-[76vw] shrink-0 snap-start scroll-ml-5 self-center text-[2.1rem] text-bone lg:w-[30rem] lg:text-[3.6rem]">
+                    <p className="t-serif w-[76vw] shrink-0 snap-start scroll-ml-5 self-center text-[2.1rem] lg:w-[30rem] lg:text-[3.6rem]">
                       {CALLOUTS[i / 2]}
                     </p>
                   ) : null}
@@ -120,7 +125,7 @@ export function About() {
 
             {/* Fundador: painel claro, na cor do fundo da foto, para o retrato se fundir ao cartão */}
             <article
-              className="relative flex w-[88vw] shrink-0 snap-start scroll-ml-5 flex-col overflow-hidden rounded-[0.5rem] text-ink lg:h-full lg:w-[70rem] lg:flex-row"
+              className="relative flex w-[88vw] shrink-0 snap-start scroll-ml-5 flex-col overflow-hidden rounded-[0.5rem] text-ink shadow-[0_2rem_5rem_-2rem_rgba(0,0,0,0.35)] lg:h-full lg:w-[70rem] lg:flex-row"
               style={{ background: media.founderBackdrop }}
             >
               <div className="flex flex-col justify-between gap-10 p-6 lg:w-[50%] lg:p-10">
@@ -168,17 +173,17 @@ export function About() {
 
         {pinned ? (
           <div className="gutter absolute inset-x-0 bottom-6 flex items-center gap-4" aria-hidden>
-            <span className="t-eyebrow text-ash">Role para avançar</span>
-            <div className="h-px flex-1 bg-steel">
+            <span className="t-eyebrow opacity-60">Role para avançar</span>
+            <div className="h-px flex-1 bg-current/25">
               <motion.div style={{ scaleX: bar }} className="h-px origin-left bg-accent" />
             </div>
           </div>
         ) : (
-          <p className="gutter t-eyebrow mt-6 text-ash lg:hidden" aria-hidden>
+          <p className="gutter t-eyebrow mt-6 opacity-60 lg:hidden" aria-hidden>
             Arraste para o lado →
           </p>
         )}
-      </div>
+      </motion.div>
     </section>
   );
 }

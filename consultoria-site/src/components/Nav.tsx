@@ -3,14 +3,12 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { contact, nav, whatsappHref } from "@/config/site";
+import Image from "next/image";
+import { contact, media, nav, whatsappHref } from "@/config/site";
+import { lockScroll, scrollToId } from "./SmoothScroll";
 import { Brand } from "./ui/Brand";
-import { Frame } from "./ui/Frame";
 import { Magnetic } from "./ui/Magnetic";
-import { Motif } from "./ui/Motif";
 import { EASE } from "./ui/motion";
-
-const MENU_MOTIFS = ["network", "steps", "rings", "grid", "untangle"] as const;
 
 export function Nav() {
   const [open, setOpen] = useState(false);
@@ -20,7 +18,7 @@ export function Nav() {
   const toggle = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    document.documentElement.style.overflow = open ? "hidden" : "";
+    lockScroll(open);
     if (open) firstLink.current?.focus({ preventScroll: true });
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && open) {
@@ -31,16 +29,16 @@ export function Nav() {
     window.addEventListener("keydown", onKey);
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.documentElement.style.overflow = "";
+      lockScroll(false);
     };
   }, [open]);
 
   const go = useCallback((e: React.MouseEvent, id: string) => {
     e.preventDefault();
     setOpen(false);
-    document.documentElement.style.overflow = "";
+    lockScroll(false);
     requestAnimationFrame(() => {
-      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      scrollToId(id);
       history.replaceState(null, "", `#${id}`);
     });
   }, []);
@@ -101,24 +99,26 @@ export function Nav() {
             transition={{ duration: 0.85, ease: EASE }}
           >
             <div className="gutter grid min-h-full grid-cols-1 gap-10 pb-8 pt-28 lg:grid-cols-12 lg:pt-32">
-              {/* Painel de prévia: muda conforme o link em foco */}
-              <div className="hidden lg:col-span-5 lg:block">
-                <Frame className="h-[62vh] text-fog" fill="var(--color-graphite)" tab={<span>{nav[hover].hint}</span>}>
-                  <div className="grid h-full place-items-center p-10">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={hover}
-                        initial={{ opacity: 0, scale: 0.92 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 1.05 }}
-                        transition={{ duration: 0.35, ease: EASE }}
-                        className="h-full w-full"
-                      >
-                        <Motif kind={MENU_MOTIFS[hover % MENU_MOTIFS.length]} live className="h-full w-full" />
-                      </motion.div>
-                    </AnimatePresence>
-                  </div>
-                </Frame>
+              {/* Grade de fotos: a foto do link em foco ganha cor, as demais ficam em duotone */}
+              <div className="hidden grid-cols-2 gap-4 self-start lg:col-span-5 lg:grid" aria-hidden>
+                {media.menu.map((src, i) => (
+                  <motion.div
+                    key={src}
+                    initial={reduce ? false : { opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: EASE, delay: 0.25 + i * 0.07 }}
+                    className="relative aspect-[10/11] overflow-hidden bg-coal"
+                  >
+                    <Image
+                      src={src}
+                      alt=""
+                      fill
+                      sizes="20vw"
+                      className={`object-cover transition-[filter,transform] duration-700 ease-brand ${hover % media.menu.length === i ? "scale-105" : "opacity-70 grayscale"}`}
+                    />
+                    <div className={`absolute inset-0 bg-accent mix-blend-multiply transition-opacity duration-700 ${hover % media.menu.length === i ? "opacity-0" : "opacity-35"}`} />
+                  </motion.div>
+                ))}
               </div>
 
               <nav aria-label="Seções" className="flex flex-col justify-between gap-12 lg:col-span-6 lg:col-start-7">
@@ -137,8 +137,9 @@ export function Nav() {
                         className={`group/link flex items-baseline gap-4 py-1 text-[clamp(2.6rem,11vw,5.2rem)] uppercase leading-[0.94] tracking-[-0.03em] transition-colors duration-300 [font-stretch:80%] lg:[font-stretch:100%] ${hover === i ? "text-bone" : "text-ash"}`}
                       >
                         <span className="t-eyebrow w-6 text-accent">{String(i + 1).padStart(2, "0")}</span>
-                        <span className="transition-transform duration-500 ease-brand group-hover/link:translate-x-3 group-focus-visible/link:translate-x-3">
+                        <span className="relative transition-transform duration-500 ease-brand group-hover/link:translate-x-3 group-focus-visible/link:translate-x-3">
                           {item.label}
+                          <span className="absolute left-0 top-[52%] h-[0.07em] w-full origin-left scale-x-0 bg-accent transition-transform duration-500 ease-brand group-hover/link:scale-x-100 group-focus-visible/link:scale-x-100" />
                         </span>
                       </motion.a>
                     </li>

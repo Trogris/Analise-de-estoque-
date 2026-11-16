@@ -1,5 +1,6 @@
 import { Check } from "lucide-react";
-import { audience, solutions } from "@/config/site";
+import { audience, solutions, stack } from "@/config/site";
+import { ParallaxY } from "../ui/ParallaxY";
 import { Frame } from "../ui/Frame";
 import { Tilt } from "../ui/Tilt";
 import { Motif } from "../ui/Motif";
@@ -39,9 +40,10 @@ export function Solutions() {
           </Reveal>
         </header>
 
-        <ul className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-5">
+        <ul className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-5 lg:pb-24">
           {solutions.map((s, i) => (
             <li key={s.title}>
+              <ParallaxY from={[0, 110, 40][i]} to={[0, -70, -110][i]} className="h-full">
               <Reveal delay={i * 0.1} className="h-full">
                 <Tilt className="h-full">
                 <Frame className="h-full text-fog" tab={<span className="text-bone">{s.tag}</span>} style={{ "--tab": "58%" } as React.CSSProperties}>
@@ -66,9 +68,25 @@ export function Solutions() {
                 </Frame>
                 </Tilt>
               </Reveal>
+              </ParallaxY>
             </li>
           ))}
         </ul>
+      </div>
+
+      <div className="mt-16 overflow-hidden border-y border-steel py-6" aria-label={`Tecnologias e entregas: ${stack.join(", ")}`}>
+        <div className="marquee" aria-hidden>
+          {[0, 1].map((k) => (
+            <div key={k} className="flex shrink-0 items-center">
+              {stack.map((t) => (
+                <span key={t} className="flex items-center gap-8 pr-8 text-[1.5rem] font-bold uppercase tracking-[-0.02em] text-fog [font-stretch:85%] lg:text-[2rem]">
+                  {t}
+                  <span className="inline-block size-2.5 rotate-45 bg-accent" />
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
