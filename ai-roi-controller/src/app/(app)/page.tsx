@@ -95,7 +95,7 @@ export default function Painel() {
 
   return (
     <>
-      <PageHeader eyebrow="Visão executiva" title="O retorno da sua IA, em números." subtitle={`Investimento, benefício validado e produtividade de ${periodLabel(scope.from)} a ${periodLabel(scope.to)}.`}
+      <PageHeader eyebrow="Visão executiva" title={<>O retorno da sua IA, <span className="accent-word">em números.</span></>} subtitle={`Investimento, benefício validado e produtividade de ${periodLabel(scope.from)} a ${periodLabel(scope.to)}.`}
         actions={hasData ? <>
           <Link href="/apresentacao" className="btn btn-primary"><Play size={15} />Modo apresentação</Link>
           <Link href="/relatorio" className="btn btn-ghost">Gerar relatório<ArrowRight size={15} /></Link>
@@ -176,7 +176,7 @@ export default function Painel() {
                   <p className="text-ink-3 text-[13px]">{chart === "money" ? "Investimento e benefício financeiro validado" : "ROI de cada mês; meses sem dados suficientes ficam em branco"}</p></div>
                 <Segmented label="Tipo de gráfico" value={chart} onChange={setChart} options={[["money", "Valores"], ["roi", "ROI"]]} />
               </div>
-              {chart === "money" ? (<><Legend items={[["Benefício validado", "var(--chart-1)", true], ["Investimento", "var(--chart-2)", true]]} /><div className="mt-2"><MoneyChart data={series} /></div></>) : <RoiChart data={series} />}
+              {chart === "money" ? (<><Legend items={[["Benefício validado", "var(--pos)", true], ["Investimento", "var(--chart-1)", true]]} /><div className="mt-2"><MoneyChart data={series} /></div></>) : <RoiChart data={series} />}
             </section>
 
             <section className="solid p-4 sm:p-5 flex flex-col">
@@ -185,7 +185,7 @@ export default function Painel() {
               <div className="flex flex-col gap-3.5 mt-4">
                 {([
                   ["Capacidade liberada", s.capacityValue, "var(--capacity)", `${fmt.hours(s.hoursSaved)} × custo da hora. Não é caixa.`],
-                  ["Benefícios lançados", s.benefitValidated + s.benefitPending, "var(--chart-2)", "Validados + aguardando validação"],
+                  ["Benefícios lançados", s.benefitValidated + s.benefitPending, "var(--chart-1)", "Validados + aguardando validação"],
                   ["Benefício validado", s.benefitValidated, "var(--pos)", "Entra no ROI"],
                 ] as const).map(([label, v, color, hint]) => (
                   <div key={label}>
@@ -221,8 +221,8 @@ export default function Painel() {
                         <tr key={d.id}>
                           <td className="font-medium">{d.name}</td>
                           <td>
-                            <div className="flex items-center gap-2"><div className="bar flex-1"><i style={{ width: `${(d.summary.benefitValidated / maxDept) * 100}%` }} /></div><span className="num text-[12.5px] w-[84px] text-right">{fmt.moneyShort(d.summary.benefitValidated)}</span></div>
-                            <div className="flex items-center gap-2 mt-1"><div className="bar flex-1"><i style={{ width: `${(d.summary.investment / maxDept) * 100}%`, background: "var(--chart-2)" }} /></div><span className="num text-[12.5px] w-[84px] text-right text-ink-3">{fmt.moneyShort(d.summary.investment)}</span></div>
+                            <div className="flex items-center gap-2"><div className="bar flex-1"><i style={{ width: `${(d.summary.benefitValidated / maxDept) * 100}%`, background: "var(--pos)" }} /></div><span className="num text-[12.5px] w-[84px] text-right">{fmt.moneyShort(d.summary.benefitValidated)}</span></div>
+                            <div className="flex items-center gap-2 mt-1"><div className="bar flex-1"><i style={{ width: `${(d.summary.investment / maxDept) * 100}%`, background: "var(--chart-1)" }} /></div><span className="num text-[12.5px] w-[84px] text-right text-ink-3">{fmt.moneyShort(d.summary.investment)}</span></div>
                           </td>
                           <td className="r">{r !== null ? <Pill tone={r >= 0 ? "pos" : "neg"}>{r >= 0 ? "+" : ""}{fmt.pct(r)}</Pill> : <span className="text-ink-3 text-[13px]" title={indicatorText(d.summary.roi, fmt.pct).hint}>{indicatorText(d.summary.roi, fmt.pct).text}</span>}</td>
                           <td className="r">{fmt.hours(d.summary.hoursSaved)}</td>
@@ -233,7 +233,7 @@ export default function Painel() {
                     })}
                   </tbody>
                 </table>
-                <div className="px-4 sm:px-5 py-2.5 border-t border-line"><Legend items={[["Benefício validado", "var(--chart-1)"], ["Investimento", "var(--chart-2)"]]} /></div>
+                <div className="px-4 sm:px-5 py-2.5 border-t border-line"><Legend items={[["Benefício validado", "var(--pos)"], ["Investimento", "var(--chart-1)"]]} /></div>
               </div>
             ) : <p className="px-5 pb-5 text-ink-3">Nenhum departamento com dados no período.</p>}
           </section>

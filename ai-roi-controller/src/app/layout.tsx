@@ -11,7 +11,7 @@ export const viewport: Viewport = {
 };
 
 // Aplica o tema antes da primeira pintura, sem flash.
-const themeScript = `try{var t=localStorage.getItem("roi-theme");if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=t}catch(e){}`;
+const themeScript = `try{var t=localStorage.getItem("roi-theme");if(t!=="light"&&t!=="dark")t="dark";document.documentElement.dataset.theme=t}catch(e){}`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
