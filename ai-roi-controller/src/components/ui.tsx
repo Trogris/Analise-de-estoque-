@@ -176,7 +176,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 }
 
 /* ---------- Cabeçalho de página ---------- */
-export function PageHeader({ title, subtitle, actions, eyebrow }: { title: string; subtitle?: ReactNode; actions?: ReactNode; eyebrow?: string }) {
+export function PageHeader({ title, subtitle, actions, eyebrow }: { title: ReactNode; subtitle?: ReactNode; actions?: ReactNode; eyebrow?: string }) {
   return (
     <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
       <div className="min-w-0 flex-1 basis-64">

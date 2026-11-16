@@ -151,7 +151,7 @@ export default function Relatorio() {
 
           <section>
             <h2 className="text-[16px] font-semibold mb-2">Evolução mensal</h2>
-            <Legend items={[["Benefício validado", "var(--chart-1)", true], ["Investimento", "var(--chart-2)", true]]} />
+            <Legend items={[["Benefício validado", "var(--pos)", true], ["Investimento", "var(--chart-1)", true]]} />
             <MoneyChart data={series} height={240} />
           </section>
 

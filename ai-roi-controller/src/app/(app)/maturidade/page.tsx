@@ -49,7 +49,7 @@ export default function Maturidade() {
   }
   return (
     <>
-      <PageHeader eyebrow="Benchmark interno" title="Maturidade em IA" subtitle={`Uma nota de 0 a 100 por departamento e o que as áreas de maior resultado fazem diferente. Período: ${periodLabel(scope.from)} a ${periodLabel(scope.to)}.`} />
+      <PageHeader eyebrow="Benchmark interno" title={<>Maturidade <span className="accent-word">em IA</span></>} subtitle={`Uma nota de 0 a 100 por departamento e o que as áreas de maior resultado fazem diferente. Período: ${periodLabel(scope.from)} a ${periodLabel(scope.to)}.`} />
       <FilterBar dimensions={false} />
 
       <div className="enter grid gap-4 lg:gap-5 xl:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
