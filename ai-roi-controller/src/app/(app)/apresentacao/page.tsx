@@ -225,7 +225,7 @@ export default function Apresentacao() {
       </Scene>
 
       <Scene id="departamentos" no="05" label="Departamentos" arc>
-        <h2 className="mega mega-title mt-5" style={{ fontSize: "clamp(40px, 8vw, 120px)" }}><Line>Onde o <span className="serif">retorno</span></Line><Line i={1}>acontece</Line></h2>
+        <h2 className="mega mega-title mt-5" style={{ fontSize: "clamp(38px, 8vw, 124px)" }}><Line>Onde o <span className="serif">retorno</span></Line><Line i={1}>acontece</Line></h2>
         <Fade i={2} className="mt-8">
           {depts.length ? (
             <div className="rail" tabIndex={0} aria-label="Departamentos, deslize para o lado">

@@ -1,8 +1,5 @@
 @import "tailwindcss";
-@import "@fontsource-variable/inter";
-@import "@fontsource-variable/archivo/standard.css";
-@import "@fontsource/instrument-serif/400.css";
-@import "@fontsource/instrument-serif/400-italic.css";
+@import "@fontsource-variable/open-sans/wght.css";
 
 /* ------------------------------------------------------------------
    AI ROI Controller — sistema visual
@@ -52,7 +49,7 @@
   --chart-1: #0f62e6;
   --chart-2: #8a97b3;
   --chart-grid: rgba(13, 27, 62, 0.08);
-  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter Variable", "Inter", "Segoe UI", Roboto, sans-serif;
+  --font: "Open Sans Variable", "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --r-sm: 12px;
   --r-md: 16px;
   --r-lg: 24px;
@@ -124,9 +121,7 @@ body {
   font-family: var(--font);
   font-size: 15px;
   line-height: 1.45;
-  letter-spacing: -0.006em;
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: "cv11", "ss01";
 }
 .backdrop { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
 .backdrop i { position: absolute; border-radius: 50%; filter: blur(100px); will-change: transform; animation: drift 26s ease-in-out infinite alternate; }
@@ -137,7 +132,7 @@ body {
 .backdrop i:nth-child(2) { width: 46vw; height: 46vw; right: -12vw; top: 18vh; background: var(--bg-orb-2); }
 .backdrop i:nth-child(3) { width: 40vw; height: 40vw; left: 28vw; bottom: -26vw; background: var(--bg-orb-3); }
 
-h1, h2, h3 { letter-spacing: -0.022em; text-wrap: balance; }
+h1, h2, h3 { letter-spacing: -0.012em; text-wrap: balance; }
 .num { font-variant-numeric: tabular-nums; }
 ::selection { background: var(--accent-soft); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
@@ -301,7 +296,7 @@ textarea.input { min-height: 76px; resize: vertical; }
 @media print { .hero { animation: none; } .backdrop { display: none; } .solid { -webkit-backdrop-filter: none; backdrop-filter: none; } }
 
 /* Títulos de bloco com presença, na linha editorial das referências. */
-#conteudo h2:not(.mega) { font-size: 19px; letter-spacing: -0.022em; }
+#conteudo h2:not(.mega) { font-size: 19px; letter-spacing: -0.012em; }
 .eyebrow { font-size: 12.5px; font-weight: 650; letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent-ink); }
 :root[data-theme="dark"] .backdrop::after { opacity: 0.9; background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size: 44px 44px; }
 :root[data-theme="dark"] .grad-text { background: linear-gradient(120deg, #fff 30%, #8fb8ff 110%); -webkit-background-clip: text; background-clip: text; }
@@ -311,10 +306,10 @@ textarea.input { min-height: 76px; resize: vertical; }
    Linguagem editorial: tipo largo em caixa alta, faixas em movimento,
    revelações na rolagem e o modo apresentação em tela cheia.
    ================================================================== */
-:root { --font-display: "Archivo Variable", "Inter Variable", -apple-system, "Segoe UI", sans-serif; }
-.display { font-family: var(--font-display); font-stretch: 112%; font-weight: 750; letter-spacing: -0.03em; }
-.wide { font-family: var(--font-display); font-stretch: 125%; font-weight: 800; text-transform: uppercase; letter-spacing: -0.02em; line-height: 0.92; }
-.eyebrow { font-family: var(--font-display); font-stretch: 118%; }
+:root { --font-display: var(--font); }
+.display { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.02em; }
+.wide { font-family: var(--font-display); font-weight: 800; letter-spacing: -0.025em; line-height: 1; }
+
 
 /* Brilho que acompanha o ponteiro nos cartões clicáveis. */
 .lift { position: relative; overflow: hidden; }
@@ -344,10 +339,10 @@ textarea.input { min-height: 76px; resize: vertical; }
 .story-bg::after { content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px); background-size: 56px 56px; mask-image: radial-gradient(ellipse at 50% 40%, #000, transparent 75%); -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000, transparent 75%); }
 .scene { position: relative; overflow-x: clip; min-height: 100dvh; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; padding: 96px max(20px, env(safe-area-inset-right, 0px)) 72px max(20px, env(safe-area-inset-left, 0px)); }
 .scene-inner { width: 100%; max-width: 1200px; margin: 0 auto; }
-.scene-no { font-family: var(--font-display); font-stretch: 118%; font-weight: 700; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); display: flex; align-items: center; gap: 12px; }
+.scene-no { font-family: var(--font-display); font-weight: 650; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); display: flex; align-items: center; gap: 12px; }
 .scene-no::before { content: ""; width: 34px; height: 1px; background: var(--ink-3); }
-.mega { font-family: var(--font-display); font-stretch: 125%; font-weight: 850; letter-spacing: -0.045em; line-height: 0.86; font-size: clamp(64px, 17vw, 240px); font-variant-numeric: tabular-nums; }
-.mega-title { font-size: clamp(32px, 8.6vw, 150px); text-transform: uppercase; }
+.mega { font-family: var(--font-display); font-weight: 800; letter-spacing: -0.04em; line-height: 0.98; font-size: clamp(64px, 17vw, 240px); font-variant-numeric: tabular-nums; }
+.mega-title { font-size: clamp(38px, 9.4vw, 150px); text-transform: none; letter-spacing: -0.035em; font-weight: 700; }
 .outline { color: transparent; -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.55); }
 .glow-pos { color: var(--pos); text-shadow: 0 0 60px rgba(109, 255, 142, 0.35); }
 .glow-neg { color: var(--neg); text-shadow: 0 0 60px rgba(255, 116, 104, 0.3); }
@@ -368,12 +363,12 @@ textarea.input { min-height: 76px; resize: vertical; }
 
 /* ---------- Apresentação: tipo misto, molduras com aba, arco, abertura e painel final ---------- */
 .story { --frame: rgba(109, 255, 142, 0.6); --ease: cubic-bezier(0.65, 0.05, 0, 1); }
-.serif { font-family: "Instrument Serif", Georgia, "Times New Roman", serif; font-weight: 400; font-stretch: normal; letter-spacing: -0.025em; text-transform: uppercase; color: var(--pos); font-size: 1.12em; line-height: 0.8; }
+.serif { color: var(--pos); }
 .serif-blue { color: #8fb8ff; }
-.sub-serif { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; font-stretch: normal; letter-spacing: -0.01em; text-transform: none; font-size: 0.4em; line-height: 1; color: var(--ink-2); font-style: italic; }
+.sub-serif { display: inline-block; font-weight: 400; letter-spacing: -0.015em; font-size: 0.3em; line-height: 1.15; color: var(--ink-2); padding-top: 0.5em; }
 .frame { position: relative; border: 1px solid var(--frame); border-radius: 12px; background: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.01)); padding: 22px 22px 50px; transition: border-color 0.4s, transform 0.75s var(--ease), background 0.4s; }
 .frame:hover { border-color: var(--pos); background: linear-gradient(160deg, rgba(109, 255, 142, 0.1), rgba(255, 255, 255, 0.01)); transform: translateY(-4px); }
-.frame-tab { position: absolute; right: -1px; bottom: -1px; display: flex; align-items: center; gap: 10px; padding: 8px 14px 7px 18px; background: #03050a; border-top: 1px solid var(--frame); border-left: 1px solid var(--frame); border-top-left-radius: 16px; border-bottom-right-radius: 12px; font-family: var(--font-display); font-stretch: 116%; font-weight: 700; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); white-space: nowrap; max-width: calc(100% - 24px); }
+.frame-tab { position: absolute; right: -1px; bottom: -1px; display: flex; align-items: center; gap: 10px; padding: 8px 14px 7px 18px; background: #03050a; border-top: 1px solid var(--frame); border-left: 1px solid var(--frame); border-top-left-radius: 16px; border-bottom-right-radius: 12px; font-family: var(--font-display); font-weight: 650; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); white-space: nowrap; max-width: calc(100% - 24px); }
 .frame-tab b { color: var(--pos); font-weight: 800; }
 .frame-blue { --frame: rgba(120, 170, 255, 0.55); }
 .frame-blue .frame-tab b { color: #8fb8ff; }
@@ -382,7 +377,7 @@ textarea.input { min-height: 76px; resize: vertical; }
 .story-line i { display: block; width: 100%; height: 100%; transform-origin: 50% 0; transform: scaleY(var(--p, 0)); background: var(--pos); border-radius: 2px; box-shadow: 0 0 12px rgba(109, 255, 142, 0.6); }
 .intro { position: fixed; inset: 0; z-index: 9; display: grid; place-items: center; background: linear-gradient(140deg, #1f6bff, #0a2a8c); color: #fff; transition: transform 0.85s var(--ease); }
 .intro.out { transform: translateY(-101%); }
-.intro-count { font-family: var(--font-display); font-stretch: 125%; font-weight: 850; font-size: clamp(90px, 22vw, 300px); letter-spacing: -0.05em; line-height: 0.85; font-variant-numeric: tabular-nums; }
+.intro-count { font-family: var(--font-display); font-weight: 800; font-size: clamp(90px, 22vw, 300px); letter-spacing: -0.05em; line-height: 0.85; font-variant-numeric: tabular-nums; }
 .panel { position: relative; overflow: hidden; border: 1px solid var(--frame); border-radius: 40px; padding: clamp(28px, 6vw, 72px); background: radial-gradient(120% 90% at 50% 120%, rgba(109, 255, 142, 0.16), transparent 60%), repeating-radial-gradient(circle at 30% 130%, transparent 0 26px, rgba(255, 255, 255, 0.055) 26px 27px), #05070c; }
 @media (prefers-reduced-motion: reduce) { .intro { display: none; } .frame:hover { transform: none; } }
 @media (max-width: 640px) { .story-line { display: none; } .panel { border-radius: 28px; } }
