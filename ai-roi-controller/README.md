@@ -56,6 +56,7 @@ recusa a servir dados.
 | Relatório executivo: Excel e PDF (pelo diálogo de impressão do navegador) | Pronto |
 | Recomendações baseadas nos dados | Pronto |
 | Índice de maturidade em IA por departamento e benchmark interno | Pronto, com testes |
+| Modo apresentação: a história do ROI em cenas de tela cheia | Pronto |
 | Auditoria de ações | Pronto |
 | Tema claro e escuro, responsivo, navegação por teclado | Pronto |
 | Google Planilhas como banco | Pronto; **não testado contra a API real** (ver abaixo) |
