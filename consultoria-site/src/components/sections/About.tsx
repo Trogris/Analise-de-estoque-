@@ -115,6 +115,7 @@ export function About() {
                 <p className="t-eyebrow flex flex-wrap justify-between gap-2 text-ash">
                   <span>{founder.role}</span>
                   <span className="text-accent">{founder.stage}</span>
+                  <span>{media.photoNote}</span>
                 </p>
                 <div className="flex flex-col gap-5">
                   <h3 className="t-title text-[2.6rem] lg:text-[4.2rem]">{founder.name}</h3>
