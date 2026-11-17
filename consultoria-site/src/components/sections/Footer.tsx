@@ -39,9 +39,11 @@ export function Footer() {
                   {media.cutFront ? (
                     <Image src={media.cutFront.src} alt={media.cutFront.alt} fill sizes="(min-width:1024px) 40vw, 90vw" className="object-contain object-bottom [filter:drop-shadow(0_0_3rem_rgba(200,242,48,0.18))]" />
                   ) : null}
-                  <a href="#contato" className="btn absolute bottom-6 left-1/2 -translate-x-1/2">
-                    Falar com a consultoria
-                  </a>
+                  <div className="absolute inset-x-0 bottom-5 flex justify-center">
+                    <a href="#contato" className="btn shadow-[0_1rem_2.5rem_-0.5rem_rgba(0,0,0,0.7)]">
+                      Falar com a consultoria
+                    </a>
+                  </div>
                 </ParallaxY>
               </div>
 
