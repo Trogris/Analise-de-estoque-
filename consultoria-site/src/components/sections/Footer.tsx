@@ -79,7 +79,7 @@ export function Footer() {
         </div>
         <div className="t-eyebrow flex flex-wrap justify-between gap-3 px-2 pb-[max(0.25rem,env(safe-area-inset-bottom,0px))] pt-4 text-ink">
           <span>
-            © {new Date().getFullYear()} {brand.name} · {brand.descriptor}
+            © {new Date().getFullYear()} {brand.name} · {brand.descriptor} · {media.photoNote}
           </span>
           <span className="select-all">{contact.email}</span>
         </div>
