@@ -47,7 +47,7 @@ export const media = {
    * `hero` é o recorte de blazer (PNG/WebP com transparência) sobre o fundo escuro do site;
    * `heroReveal` é a camada de camiseta, revelada pela máscara que segue o cursor.
    */
-  hero: { src: "/media/hero-blazer.webp", alt: "Retrato do fundador, de blazer" } as MediaSlot,
+  hero: { src: "/media/hero-blazer.jpg", alt: "Retrato do fundador, de blazer" } as MediaSlot,
   heroReveal: "/media/hero-reveal.jpg",
   /** Recortes da pessoa (fundo transparente, tratamento escuro). */
   cutFront: { src: "/media/cut-blazer-front.webp", alt: "Fundador de blazer, de frente" } as MediaSlot,
