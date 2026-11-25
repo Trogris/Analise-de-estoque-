@@ -2,6 +2,10 @@
 
 ## 1. Estimativa de custos
 
+**Configuração escolhida: Claude Pro + "Ask Claude" → custo adicional US$ 0.** O CODEX consome
+cerca de 1 mensagem por dia e 1 por semana do seu limite de uso do Pro. Os valores abaixo valem
+apenas se você passar o A0 para a API.
+
 Preços da API (Claude Opus 5.5): **US$ 4 por milhão de tokens de entrada, US$ 20 por milhão de
 saída**. 1 token ≈ ¾ de palavra em português.
 

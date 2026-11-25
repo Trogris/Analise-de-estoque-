@@ -12,9 +12,12 @@ para você encontrá-las na busca do app Atalhos caso o aparelho esteja em outro
 
 ## 0. Preparação (10 min)
 
-1. **Chave da API**: em `console.anthropic.com` → *Billing* (adicione US$ 5–10 de crédito) →
-   *Settings → Limits* (defina um **limite de gasto mensal**, ex.: US$ 10) → *API Keys → Create Key*
-   (nome "codex-iphone"). Copie a chave para o Notas temporariamente; apague depois.
+1. **App Claude (assinatura Pro)**: instale/atualize o app Claude, faça login, abra-o uma vez e
+   deixe selecionado como padrão o modelo mais capaz que o seu plano oferece — a ação "Ask Claude"
+   usa o modelo padrão do app. Em *Configurações → Privacidade* do app, decida se quer permitir o
+   uso das conversas para melhorar os modelos.
+   *(Só para a alternativa via API: chave em `console.anthropic.com` → Billing → Limits →
+   API Keys.)*
 2. **Pastas no Notas**: crie `CODEX` (conta iCloud) e as 8 subpastas exatamente com estes nomes:
    `01 — Investigações diárias`, `02 — Caderno de curiosidades`, `03 — Descobertas`,
    `04 — Hipóteses e experimentos`, `05 — Reflexões`, `06 — Conexões entre conhecimentos`,
@@ -29,10 +32,39 @@ para você encontrá-las na busca do app Atalhos caso o aparelho esteja em outro
 
 ---
 
-## A0 · `CODEX · Chamar Claude` (o único que fala com a API)
+## A0 · `CODEX · Chamar Claude` — versão Claude Pro (a sua)
 
-Entrada: um **Dicionário** com `prompt`, `esforco` (`low`/`medium`/`high`) e `max` (número).
-Saída: o texto da resposta.
+Entrada: um **Dicionário** com `prompt` (os campos `esforco` e `max` são ignorados nesta versão;
+manter os outros atalhos iguais permite trocar para a API no futuro sem mexer neles).
+Saída: o texto da resposta. Custo: **zero além da assinatura** (conta no seu limite de uso do Pro;
+o CODEX usa ~1 mensagem/dia + 1/semana).
+
+| # | Ação | Parâmetros |
+|---|---|---|
+| 1 | **Receber** entrada | Tipo: *Dicionário*. Se não houver entrada: *Parar e Responder* |
+| 2 | **Obter Valor do Dicionário** | chave `prompt` em *Entrada do Atalho* → **Prompt** |
+| 3 | **Texto** | cole o **P0 · Prompt de sistema**, depois uma linha `=== PEDIDO ===` e a variável **Prompt** → **Mensagem** |
+| 4 | **Ask Claude** (app Claude) | Mensagem: variável **Mensagem** · se houver a opção, desative *Mostrar Ao Executar* → **Resposta** |
+| 5 | **Se** **Resposta** *não tem nenhum valor* | **Mostrar Alerta** "Claude não respondeu (limite de uso ou sem internet). Rode de novo mais tarde." → **Parar Este Atalho** · *Fim do Se* |
+| 6 | **Parar e Gerar Saída** | **Resposta** |
+
+**Teste obrigatório antes de seguir** (2 min): crie um atalho com **Dicionário**
+(`prompt` = "Responda só: CODEX ativo") → **Executar Atalho** A0 → **Mostrar Resultado**.
+- Apareceu "CODEX ativo" → a resposta volta como variável; siga o tutorial.
+- O app Claude abriu e a resposta não voltou ao atalho → use a versão API abaixo para A1/A3
+  (fica ~US$ 3–5/mês) e mantenha o Pro para o resto.
+
+Pontos a observar: a ação pode abrir o app ou exigir o iPhone desbloqueado; por isso o gatilho
+do A1 é **desligar o alarme** (ver A1). Se o seu limite de uso do Pro estiver esgotado naquele
+momento, o passo 5 avisa e você roda depois.
+
+---
+
+## A0 (alternativa) · `CODEX · Chamar Claude` via API
+
+Use esta versão só se o teste acima falhar ou se quiser fixar o modelo e rodar com a tela
+bloqueada. Entrada: um **Dicionário** com `prompt`, `esforco` (`low`/`medium`/`high`) e `max`
+(número). Saída: o texto da resposta.
 
 Nos *Detalhes* do atalho (ícone ⓘ): desative *Mostrar na Planilha de Compartilhamento*; ative
 nada mais. Ele só é chamado pelos outros.
@@ -113,9 +145,17 @@ Por que o laço dos passos 11–16: a resposta do Opus 5.5 traz primeiro um bloc
 | 18 | **Adicionar Novo Lembrete** | "Registrar descobertas do CODEX" · Lista `CODEX` · Alerta: hoje às 21:00 |
 | 19 | **Mostrar Notificação** | "5 investigações prontas — {Data Formatada}" |
 
-**Automação** (aba *Automação* → *Nova Automação* → *Hora do Dia*): 06:30, *Diariamente*,
-**Executar Imediatamente**, desative *Notificar Ao Executar* se preferir → ação **Executar Atalho**
-`CODEX · Investigações do dia`.
+**Automação (versão Pro, recomendada)**: aba *Automação* → *Nova Automação* → **Alarme** →
+*É Interrompido* (*Is Stopped*) → escolha o alarme da manhã (ou *Qualquer*) → **Executar
+Imediatamente** → ação **Executar Atalho** `CODEX · Investigações do dia`. Você estará com o
+iPhone na mão e desbloqueado, o que evita falhas do "Ask Claude"; as investigações ficam prontas
+enquanto você toma café.
+
+Para evitar rodar duas vezes no dia (soneca, segundo alarme), coloque no **início** do A1:
+**Buscar Notas** (pasta `01 — Investigações diárias`, *Data de Criação é hoje*) → **Se** *tem
+algum valor* → **Parar Este Atalho**.
+
+*(Versão API: Automação → Hora do Dia 06:30, Diariamente, Executar Imediatamente.)*
 
 ---
 
@@ -175,7 +215,12 @@ resultado ao texto do passo 3.
 
 **Automação**: *Hora do Dia* → domingo 18:00, *Semanalmente*. Use **Executar Imediatamente**: o
 menu do passo 10 aparece como notificação e **nada é enviado sem o seu toque em "Enviar"**. Essa é
-a autorização explícita a cada semana.
+a autorização explícita a cada semana. Como você toca no menu, o iPhone estará desbloqueado
+quando o "Ask Claude" rodar.
+
+> Revisão longa (muitas notas) no Pro: se a resposta vier cortada ou falhar, envie só as notas
+> com algo escrito em "Meu registro" (adicione no laço do passo 4: **Se** *Item Repetido*
+> *contém* `Meu registro:` seguido de texto) ou divida em duas execuções.
 
 > Privacidade: o filtro por pasta garante que só notas do CODEX são lidas. Notas bloqueadas
 > nunca são acessíveis aos Atalhos.
@@ -221,4 +266,6 @@ Modelos sugeridos (escolha pelo menu):
 - Para depurar, insira **Mostrar Resultado** temporariamente após qualquer ação.
 - Se *Criar Rich Text a partir de Markdown* deixar a nota estranha, remova o passo e crie a nota
   com o texto puro — os `#` e `**` ficam visíveis, mas tudo funciona.
-- Para mudar o modelo, o esforço ou as regras: edite **só o A0** (campo `model` ou o texto P0).
+- Para mudar o modelo, o esforço ou as regras: edite **só o A0** (texto P0; na versão Pro o
+  modelo é o padrão do app Claude; na versão API, o campo `model`).
+- Para trocar Pro ↔ API: substitua apenas o conteúdo do A0. Nenhum outro atalho muda.

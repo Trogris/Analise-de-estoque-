@@ -186,9 +186,10 @@ Convenções úteis no caderno:
 
 ## 5. Decisões de projeto (e por quê)
 
-1. **API em vez do app Claude como motor padrão** — é a única via que comprovadamente roda em automação
-   sem interação, devolve texto para o atalho e permite fixar o modelo e as regras. O "Ask Claude"
-   fica como alternativa sem custo adicional para quem já assina.
+1. **Motor: app Claude (assinatura Pro) via ação "Ask Claude"** — custo zero além da assinatura.
+   Como a ação pode exigir o iPhone desbloqueado, o A1 dispara **ao desligar o alarme da manhã** e
+   o A3 só roda depois do seu toque em "Enviar". Se o teste do A0 mostrar que a resposta não volta
+   ao atalho, troca-se apenas o A0 para a versão API (US$ 3–5/mês); os outros atalhos não mudam.
 2. **Modelo: `claude-opus-5-5`** (o mais capaz da linha Opus, US$ 4 / US$ 20 por milhão de tokens).
    Rigor de fontes e distinção epistêmica pedem o melhor raciocínio; o custo mensal continua baixo.
    Trocar para `claude-sonnet-5-5` ou `claude-haiku-5-5` é uma edição de uma linha em A0, se você quiser.
