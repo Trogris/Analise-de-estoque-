@@ -269,3 +269,82 @@ Modelos sugeridos (escolha pelo menu):
 - Para mudar o modelo, o esforço ou as regras: edite **só o A0** (texto P0; na versão Pro o
   modelo é o padrão do app Claude; na versão API, o campo `model`).
 - Para trocar Pro ↔ API: substitua apenas o conteúdo do A0. Nenhum outro atalho muda.
+
+---
+
+## Modo voz — usar o CODEX sem tocar na tela
+
+Todo atalho pode ser chamado pela Siri pelo nome. Use nomes curtos e fáceis de falar. Os
+nomes abaixo já servem como frase para a Siri.
+
+| Você diz | Atalho | O que acontece |
+|---|---|---|
+| "E aí Siri, **CODEX de hoje**" | A6 (novo) | Lê em voz alta as 5 investigações do dia (sem as dicas) |
+| "E aí Siri, **Curiosidade**" | A2 | Você dita a curiosidade; ela é anotada |
+| "E aí Siri, **Meu registro**" | A7 (novo) | Você dita o que descobriu; o texto é acrescentado à nota de hoje |
+| "E aí Siri, **Registrar**" | A5 | O menu é falado, você responde ("Hipótese"…) e dita |
+| "E aí Siri, **Perguntar ao caderno**" | A4 | Troque os dois *Pedir Entrada* por **Ditar Texto**; a resposta é lida com **Falar Texto** |
+| "E aí Siri, **Dica**" | A8 (novo) | Pergunta "qual investigação?", e lê só as dicas daquela |
+
+Também no A1: ao final, acrescente **Falar Texto** "Bom dia. Suas cinco investigações estão
+prontas. Diga 'CODEX de hoje' para ouvir." Assim o despertador já vira o início da rotina.
+
+### A6 · `CODEX de hoje` (ler em voz alta)
+
+| # | Ação | Parâmetros |
+|---|---|---|
+| 1 | **Buscar Notas** | Pasta `01 — Investigações diárias` · *Data de Criação é hoje* · Limite 1 |
+| 2 | **Se** *não tem nenhum valor* | **Falar Texto** "Ainda não há investigações hoje." → **Parar Este Atalho** · *Fim do Se* |
+| 3 | **Obter Texto da Entrada** (*Get Text from Input*) | *Notas* (corpo como texto) |
+| 4 | **Dividir Texto** | separador personalizado `Dicas — só abra se travar` → **Obter Item da Lista** *Primeiro Item* (tira as dicas) |
+| 5 | **Substituir Texto** | Procurar `[#*_>\`]` → substituir por nada · ative *Expressão Regular* |
+| 6 | **Substituir Texto** | Procurar `\[(FATO\|TEORIA\|HIPÓTESE\|INTERPRETAÇÃO\|CRENÇA\|ESPECULAÇÃO)\]` → `($1)` · Expressão Regular (a etiqueta é lida como "entre parênteses, fato") |
+| 7 | **Substituir Texto** | Procurar `Meu registro:` → substituir por nada |
+| 8 | **Falar Texto** (*Speak Text*) | Idioma: Português (Brasil) · Voz: a que preferir (Ajustes → Acessibilidade → Conteúdo Falado → Vozes, baixe uma voz "Aprimorada") · Velocidade ~0,5 · *Aguardar até Terminar* ativado |
+
+Dica: para ouvir uma investigação de cada vez, troque o passo 8 por **Dividir Texto** com o
+separador `## ` → **Repetir com Cada** → **Falar Texto** do item → **Escolher do Menu**
+"Próxima / Parar". Pela Siri, você responde falando "Próxima".
+
+### A7 · `Meu registro` (responder por voz)
+
+| # | Ação | Parâmetros |
+|---|---|---|
+| 1 | **Escolher do Menu** | "Sobre qual investigação?" · `1`, `2`, `3`, `4`, `5`, `Geral` (pela Siri, responda falando o número) |
+| 2 | **Ditar Texto** | Português (Brasil) · *Parar de escutar: Após Pausa* (ou *Ao Tocar*, para registros longos) → **Fala** |
+| 3 | **Formatar Data** (Data Atual) | `HH:mm` → **Hora** |
+| 4 | **Buscar Notas** | Pasta `01 — Investigações diárias` · *Data de Criação é hoje* · Limite 1 |
+| 5 | **Adicionar à Nota** (*Append to Note*) | Texto: `🎙️ {Hora} · Investigação {Resultado do Menu}: {Fala}` · Nota: *Notas* |
+| 6 | **Falar Texto** | "Registrado. Quer fazer uma pergunta nova sobre isso?" → **Escolher do Menu** *Sim / Não*; *Sim*: **Ditar Texto** → **Adicionar à Nota** com `❓ Nova pergunta: …` |
+
+Se *Adicionar à Nota* não aceitar a nota vinda do *Buscar Notas* no seu iOS, troque o passo 5
+por **Criar Nota** na pasta `03 — Descobertas` com o mesmo texto e o título
+`Registro · {data} · Investigação {n}`.
+
+A revisão semanal (A3) lê esses registros falados como qualquer texto: falar conta tanto
+quanto escrever.
+
+### A8 · `Dica` (uma dica por vez, por voz)
+
+| # | Ação | Parâmetros |
+|---|---|---|
+| 1 | **Escolher do Menu** | "Dica de qual investigação?" · `1`…`5` |
+| 2 | **Buscar Notas** de hoje (como A6) → **Obter Texto da Entrada** | |
+| 3 | **Dividir Texto** por `Dicas — só abra se travar` → *Último Item* | |
+| 4 | **Corresponder Texto** | `(?s){Resultado do Menu}\..*?(?=\n[1-5]\.|$)` (bloco de dicas daquela investigação) |
+| 5 | **Substituir Texto** `[#*_]` → nada (regex) → **Falar Texto** | |
+
+### Diálogo socrático falado (sem montar nada)
+
+Para *conversar* sobre uma investigação, use o **modo de voz do app Claude**: abra a nota do
+dia, copie a investigação, abra o app Claude, cole e diga: "Seja meu tutor socrático sobre isto.
+Não me dê a resposta; me faça uma pergunta por vez." Depois, diga "Meu registro" à Siri para
+guardar a conclusão no caderno.
+
+### Captura com um toque
+
+- **Botão de Ação** (Ajustes → Botão de Ação → Atalho): `Curiosidade` ou `Meu registro`.
+- **AirPods**: com "Anunciar Notificações" e a Siri ativos, dá para usar o CODEX caminhando,
+  só pela voz.
+- **Apple Watch** (se tiver): os atalhos aparecem no app Atalhos do relógio; ative *Mostrar no
+  Apple Watch* nos detalhes de A2 e A7.

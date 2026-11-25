@@ -83,6 +83,9 @@ Princípio central: **separar o caderno humano da memória da máquina.**
 | **A3 · Revisão semanal** | Automação domingo 18:00 | notas da semana (pastas 01–06), `memoria.md` | Nota em *07*, linha em `memoria.md` | sim, **com sua autorização explícita** |
 | **A4 · Perguntar ao caderno** | toque / Siri | notas que contêm o termo buscado | resposta na tela (opcional: nota em *06*) | sim, **com autorização** |
 | **A5 · Registrar** | "E aí Siri, Registrar" | — | Nota em *03*, *04*, *05*, *06* ou *08* (menu) | não |
+| **A6 · CODEX de hoje** | "E aí Siri, CODEX de hoje" | nota do dia | — (lê em voz alta) | não |
+| **A7 · Meu registro** | "E aí Siri, Meu registro" | — | acrescenta o registro falado à nota do dia | não |
+| **A8 · Dica** | "E aí Siri, Dica" | nota do dia | — (lê uma dica) | não |
 
 ### Como o sistema cumpre cada requisito
 
